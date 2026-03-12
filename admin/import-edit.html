@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ <link rel="icon" type="image/png" href="/assets/images/logo-1.png" />
+ <title>ChickenJoy Admin | Sửa phiếu nhập</title>
+ <link rel="stylesheet" href="/assets/css/admin.css" />
+
+</head>
+<body class="admin-body">
+  <aside class="sidebar">
+  <div class="sidebar-header">
+   <img src="/assets/images/logo.png" alt="Logo" class="logo-img">
+   <h2><span> ChickenJoy</span></h2>
+  </div>
+  <nav class="sidebar-menu">
+   <a href="../admin/dashboard.html"> 
+    <img src="/assets/images/icons/home.png" alt="Trang chủ">
+    <span>Trang chủ</span>
+   </a>
+   <a href="../admin/user-management.html" > 
+  <img src="/assets/images/icons/user-add.png" alt="Quản lý người dùng">
+  <span>Quản lý người dùng</span>
+ </a>
+     <a href="../admin/category.html">
+      <img src="/assets/images/icons/burger.png" alt="Loại sản phẩm">
+      <span>Loại sản phẩm</span>
+    </a>
+    <a href="../admin/list.html">
+      <img src="/assets/images/icons/app.png" alt="Danh mục sản phẩm">
+      <span>Danh mục sản phẩm</span>
+    </a>
+    <a href="../admin/import.html" class="active"> 
+      <img src="/assets/images/icons/import.png" alt="Nhập hàng">
+      <span>Nhập hàng</span>
+    </a>
+
+ <a href="../admin/price.html"> 
+  <img src="/assets/images/icons/dollar.png" alt="Giá bán">
+  <span>Giá bán</span>
+ </a>
+   
+    <a href="../admin/order-management.html" > 
+  <img src="/assets/images/icons/order-history.png" alt="Quản lý đơn đặt hàng">
+  <span>Quản lý đơn đặt hàng</span>
+ </a>
+    <a href="../admin/inventory.html"> 
+  <img src="/assets/images/icons/inventory-alt.png" alt="Quản lý tồn kho">
+  <span>Quản lý tồn kho</span>
+ </a>
+ <div class="sidebar-footer">
+  <a href="../index.html" class="logout-btn">
+    <span>Đăng xuất</span>
+  </a>
+ </div>
+ </nav>
+ </aside>
+
+  <main class="main-content">
+  <header class="main-header">
+   <h1>Sửa phiếu nhập</h1>
+   <a href="import.html" class="btn-primary" style="background: #6c757d;">Quay lại</a>
+  </header>
+
+    <div class="import-layout">
+
+      <div class="import-forms-column">
+    <section class="form-section">
+     <h2>Thông tin phiếu </h2>
+     
+          <div class="form-group">
+      <label for="import-code">Mã phiếu:</label>
+      <input type="text" id="import-code" value="PN004" readonly style="background: #eee;">
+     </div>
+
+          <div class="form-group">
+      <label for="import-date">Ngày nhập:</label>
+      <input type="date" id="import-date" value="2025-11-02">
+     </div>
+     
+          <div class="form-group">
+      <label for="import-status">Trạng thái:</label>
+      <select id="import-status">
+       <option value="waiting" selected>Đang chờ</option>
+       <option value="done">Đã hoàn thành</option>
+       <option value="cancelled">Đã hủy</option>
+      </select>
+     </div>
+
+     <hr style="border: 0; border-top: 1px solid #eee; margin: 25px 0;">
+
+          <h2>Thêm sản phẩm vào phiếu</h2>
+     <div class="add-product-form">
+      <div class="form-group">
+       <label for="prod-select">Chọn sản phẩm:</label>
+       <select id="prod-select">
+        <option value="">-- Chọn sản phẩm --</option>
+        <option value="SP001">Gà rán giòn tan</option>
+        <option value="SP002">Gà rán Hàn Quốc</option>
+        <option value="SP003">Cánh gà Buffalo</option>
+        <option value="SP004">Hamburger</option>
+        <option value="SP005">Combo gia đình</option>
+        <option value="SP006">Nước nha đam</option>
+        <option value="SP007">Mỳ Ý</option>
+        <option value="SP008">Khoai tây chiên</option>
+       </select>
+      </div>
+      <div class="form-group">
+       <label for="prod-quantity">Số lượng:</label>
+       <input type="number" id="prod-quantity" placeholder="0">
+      </div>
+      <div class="form-group">
+       <label for="prod-cost">Giá nhập (VNĐ):</label>
+       <input type="number" id="prod-cost" placeholder="10000">
+      </div>
+      <button class="btn-secondary" type="button" style="width: 100%; margin-top: 10px;">+ Thêm vào phiếu</button>
+     </div>
+    </section>
+   </div>
+
+      <div class="import-table-column">
+    <h2>Chi tiết sản phẩm trong phiếu</h2>
+    <section class="table-section">
+     <table class="data-table">
+      <thead>
+       <tr>
+        <th>Tên sản phẩm</th>
+        <th style="width: 15%;">Số lượng</th>
+        <th style="width: 25%;">Đơn giá (VNĐ)</th>
+        <th>Thành tiền</th>
+        <th>Xóa</th>
+       </tr>
+      </thead>
+      <tbody>
+              <tr>
+        <td>Combo gia đình</td>
+        <td>
+         <input type="number" value="5" class="table-input">
+        </td>
+        <td>
+         <input type="number" value="259000" class="table-input">
+        </td>
+        <td>1.295.000đ</td>
+        <td><a href="#" class="btn-delete" style="min-width: 50px;">Xóa</a></td>
+       </tr>
+       <tr>
+        <td>Hamburger</td>
+        <td>
+         <input type="number" value="6" class="table-input">
+        </td>
+        <td>
+         <input type="number" value="35000" class="table-input">
+        </td>
+        <td>210.000đ</td>
+        <td><a href="#" class="btn-delete" style="min-width: 50px;">Xóa</a></td>
+       </tr>
+      </tbody>
+      <tfoot>
+       <tr>
+        <td colspan="3" style="text-align: left; font-weight: bold; font-size: 18px;">TỔNG TIỀN:</td>
+        <td colspan="2" style="text-align: mid;font-weight: bold; font-size: 18px; color: var(--main-color);">1.505.000đ</td>
+       </tr>
+      </tfoot>
+     </table>
+</section>
+    
+
+        <div class="form-actions" style="margin-top: 25px; padding: 20px;">
+          <a href="import.html" class="btn-primary">Lưu thay đổi</a>
+     <a href="import.html" class="btn-cancel">Hủy bỏ</a>
+    </div>
+   </div>
+
+  </div>  </main>
+</body>
+</html>

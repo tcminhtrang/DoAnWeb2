@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/assets/images/logo-1.png" />
+  <title>ChickenJoy Admin | Giá bán</title>
+  <link rel="stylesheet" href="/assets/css/admin.css" />
+</head>
+<body class="admin-body">
+   <aside class="sidebar">
+  <div class="sidebar-header">
+   <img src="/assets/images/logo.png" alt="Logo" class="logo-img">
+   <h2><span> ChickenJoy</span></h2>
+  </div>
+  <nav class="sidebar-menu">
+   <a href="../admin/dashboard.html" > 
+    <img src="/assets/images/icons/home.png" alt="Trang chủ">
+    <span>Trang chủ</span>
+   </a>
+   <a href="../admin/user-management.html" > 
+    <img src="/assets/images/icons/user-add.png" alt="Quản lý người dùng">
+    <span>Quản lý người dùng</span>
+   </a>
+   <a href="../admin/category.html">
+    <img src="/assets/images/icons/burger.png" alt="Loại sản phẩm">
+    <span>Loại sản phẩm</span>
+   </a>
+   <a href="../admin/list.html">
+    <img src="/assets/images/icons/app.png" alt="Danh mục sản phẩm">
+    <span>Danh mục sản phẩm</span>
+   </a>
+   <a href="../admin/import.html">
+    <img src="/assets/images/icons/import.png" alt="Nhập hàng">
+    <span>Nhập hàng</span>
+   </a>
+
+   <a href="../admin/price.html" class="active"> 
+    <img src="/assets/images/icons/dollar.png" alt="Giá bán">
+    <span>Giá bán</span>
+   </a>
+      
+         <a href="../admin/order-management.html"> 
+    <img src="/assets/images/icons/order-history.png" alt="Quản lý đơn đặt hàng">
+    <span>Quản lý đơn đặt hàng</span>
+   </a>
+         <a href="../admin/inventory.html"> 
+    <img src="/assets/images/icons/inventory-alt.png" alt="Quản lý tồn kho">
+    <span>Quản lý tồn kho</span>
+   </a>
+   <div class="sidebar-footer">
+  <a href="../index.html" class="logout-btn">
+    <span>Đăng xuất</span>
+  </a>
+ </div>
+  </nav>
+ </aside>
+
+  <main class="main-content">
+    <header class="main-header">
+      <h1>Quản lý giá bán</h1>
+      <a href="../admin/price-add.html" class="btn-primary">+ Cập nhật giá mới</a>
+    </header>
+    <div class="table-toolbar">
+      <input type="text" placeholder="🔍 Tìm theo mã sản phẩm...">
+    </div>
+    <section class="table-section">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Mã SP</th>
+            <th>Tên sản phẩm</th>
+            <th class="text-center">Giá nhập (Vốn)</th>
+            <th class="text-center">% Lợi nhuận</th> 
+            <th class="text-center">Giá bán (VAT)</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>SP001</td>
+            <td>Gà rán giòn tan</td>
+            <td class="text-center">35.000đ</td>
+            <td class="text-center"><span style="color: #008000; font-weight: 500;">154%</span></td> 
+            <td class="text-center">89.000đ</td>
+            <td>
+              <div class="actions">
+                <a href="../admin/price-edit.html" class="btn-edit">Sửa giá</a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>SP002</td>
+            <td>Gà rán Hàn Quốc</td>
+            <td class="text-center">48.000đ</td>
+            <td class="text-center"><span style="color: #008000; font-weight: 500;">148%</span></td> 
+            <td class="text-center">119.000đ</td>
+            <td>
+              <div class="actions">
+                <a href="../admin/price-edit.html" class="btn-edit">Sửa giá</a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>SP003</td>
+            <td>Cánh gà Buffalo </td>
+            <td class="text-center">35.000đ</td>
+            <td class="text-center"><span style="color: #008000; font-weight: 500;">154%</span></td> 
+            <td class="text-center">89.000đ</td>
+            <td>
+              <div class="actions">
+                <a href="../admin/price-edit.html" class="btn-edit">Sửa giá</a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>SP004</td>
+            <td>Hamburger </td>
+            <td class="text-center">32.000đ</td>
+            <td class="text-center"><span style="color: #008000; font-weight: 500;">147%</span></td> 
+            <td class="text-center">79.000đ</td>
+            <td>
+              <div class="actions">
+                <a href="../admin/price-edit.html" class="btn-edit">Sửa giá</a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>SP005</td>
+            <td>Combo gia đình </td>
+            <td class="text-center">110.000đ</td>
+            <td class="text-center"><span style="color: #008000; font-weight: 500;">135%</span></td> 
+            <td class="text-center">259.000đ</td>
+            <td>
+              <div class="actions">
+                <a href="../admin/price-edit.html" class="btn-edit">Sửa giá</a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>SP006</td>
+            <td>Nước nha đam </td>
+            <td class="text-center">8.000đ</td>
+            <td class="text-center"><span style="color: #008000; font-weight: 500;">338%</span></td> 
+            <td class="text-center">35.000đ</td>
+            <td>
+              <div class="actions">
+                <a href="../admin/price-edit.html" class="btn-edit">Sửa giá</a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>SP007</td>
+            <td>Mỳ Ý </td>
+            <td class="text-center">28.000đ</td>
+            <td class="text-center"><span style="color: #008000; font-weight: 500;">146%</span></td> 
+            <td class="text-center">69.000đ</td>
+            <td>
+              <div class="actions">
+                <a href="../admin/price-edit.html" class="btn-edit">Sửa giá</a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>SP008</td>
+            <td>Khoai tây chiên </td>
+            <td class="text-center">8.000đ</td>
+            <td class="text-center"><span style="color: #008000; font-weight: 500;">275%</span></td> 
+            <td class="text-center">30.000đ</td>
+            <td>
+              <div class="actions">
+                <a href="../admin/price-edit.html" class="btn-edit">Sửa giá</a>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>

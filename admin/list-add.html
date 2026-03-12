@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/assets/images/logo-1.png" />
+  <title>ChickenJoy Admin | Thêm sản phẩm</title>
+  <link rel="stylesheet" href="/assets/css/admin.css" />
+</head>
+<body class="admin-body">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <img src="/assets/images/logo.png" alt="Logo" class="logo-img">
+      <h2><span> ChickenJoy</span></h2>
+    </div>
+    <nav class="sidebar-menu">
+      <a href="../admin/dashboard.html"> 
+        <img src="/assets/images/icons/home.png" alt="Trang chủ">
+        <span>Trang chủ</span>
+      </a>
+      <a href="../admin/user-management.html" > 
+    <img src="/assets/images/icons/user-add.png" alt="Quản lý người dùng">
+    <span>Quản lý người dùng</span>
+   </a>
+     <a href="../admin/category.html">
+      <img src="/assets/images/icons/burger.png" alt="Loại sản phẩm">
+      <span>Loại sản phẩm</span>
+     </a>
+     <a href="../admin/list.html" class="active">
+      <img src="/assets/images/icons/app.png" alt="Danh mục sản phẩm">
+      <span>Danh mục sản phẩm</span>
+     </a>
+     <a href="../admin/import.html"> 
+      <img src="/assets/images/icons/import.png" alt="Nhập hàng">
+      <span>Nhập hàng</span>
+     </a>
+
+   <a href="../admin/price.html"> 
+    <img src="/assets/images/icons/dollar.png" alt="Giá bán">
+    <span>Giá bán</span>
+   </a>
+      
+     <a href="../admin/order-management.html" > 
+    <img src="/assets/images/icons/order-history.png" alt="Quản lý đơn đặt hàng">
+    <span>Quản lý đơn đặt hàng</span>
+   </a>
+         <a href="../admin/inventory.html"> 
+    <img src="/assets/images/icons/inventory-alt.png" alt="Quản lý tồn kho">
+    <span>Quản lý tồn kho</span>
+   </a>
+   <div class="sidebar-footer">
+  <a href="../index.html" class="logout-btn">
+    <span>Đăng xuất</span>
+  </a>
+ </div>
+  </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="main-header">
+      <h1>Thêm sản phẩm mới</h1>
+      <a href="list.html" class="btn-primary" style="background: #6c757d;">Quay lại</a>
+    </header>
+
+    <section class="form-section">
+      <form action="#" method="get">
+        <div class="form-group">
+          <label for="prod-category">Loại sản phẩm:</label>
+          <select id="prod-category">
+            <option value="">-- Chọn loại sản phẩm --</option>
+            <option value="L01">Gà rán</option>
+            <option value="L02">Burger</option>
+            <option value="L03">Combo ăn trưa</option>
+            <option value="L04">Mỳ Ý</option>
+            <option value="L05">Pizza</option>
+            <option value="L06">Món ăn kèm</option>
+            <option value="L07">Đồ uống</option>
+            <option value="L08">Tráng miệng</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="prod-code">Mã sản phẩm:</label>
+          <input type="text" id="prod-code" placeholder="Ví dụ: SP001">
+        </div>
+
+        <div class="form-group">
+          <label for="prod-name">Tên sản phẩm:</label>
+          <input type="text" id="prod-name" placeholder="Ví dụ: Gà rán giòn tan">
+        </div>
+
+        <div class="form-group">
+          <label for="prod-image">Hình ảnh (URL):</label>
+          <input type="text" id="prod-image" placeholder="Nhập đường dẫn URL của hình ảnh...">
+        </div>
+
+        <div class="form-group">
+          <label for="prod-desc">Mô tả:</label>
+          <textarea id="prod-desc" rows="4" placeholder="Mô tả ngắn về sản phẩm..."></textarea>
+        </div>
+
+        <div class="form-actions">
+          <a href="list.html" class="btn-primary">Lưu lại</a>
+          <a href="list.html" class="btn-cancel">Hủy bỏ</a>
+        </div>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

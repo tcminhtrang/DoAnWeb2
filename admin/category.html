@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/assets/images/logo-1.png" />
+  <title>ChickenJoy Admin | Loại sản phẩm</title>
+  <link rel="stylesheet" href="/assets/css/admin.css" />
+</head>
+<body class="admin-body">
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <img src="/assets/images/logo.png" alt="Logo" class="logo-img">
+      <h2><span> ChickenJoy</span></h2>
+    </div>
+    <nav class="sidebar-menu">
+      <a href="../admin/dashboard.html"> 
+        <img src="/assets/images/icons/home.png" alt="Trang chủ">
+        <span>Trang chủ</span>
+      </a>
+      <a href="../admin/user-management.html" > 
+    <img src="/assets/images/icons/user-add.png" alt="Quản lý người dùng">
+    <span>Quản lý người dùng</span>
+   </a>
+   <a href="../admin/category.html" class="active">    
+    <img src="/assets/images/icons/burger.png" alt="Loại sản phẩm">
+   <span>Loại sản phẩm</span>
+  </a>
+  <a href="../admin/list.html">
+   <img src="/assets/images/icons/app.png" alt="Danh mục sản phẩm">
+   <span>Danh mục sản phẩm</span>
+  </a>
+  <a href="../admin/import.html"> 
+   <img src="/assets/images/icons/import.png" alt="Nhập hàng">
+   <span>Nhập hàng</span>
+  </a>
+
+   <a href="../admin/price.html"> 
+    <img src="/assets/images/icons/dollar.png" alt="Giá bán">
+    <span>Giá bán</span>
+   </a>
+      
+         <a href="../admin/order-management.html" > 
+    <img src="/assets/images/icons/order-history.png" alt="Quản lý đơn đặt hàng">
+    <span>Quản lý đơn đặt hàng</span>
+   </a>
+         <a href="../admin/inventory.html"> 
+    <img src="/assets/images/icons/inventory-alt.png" alt="Quản lý tồn kho">
+    <span>Quản lý tồn kho</span>
+   <div class="sidebar-footer">
+  <a href="../index.html" class="logout-btn">
+    <span>Đăng xuất</span>
+  </a>
+ </div>
+  </nav>
+  </aside>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content">
+    <header class="main-header">
+      <h1>Quản lý loại sản phẩm</h1>
+      <!-- 3. SỬA THÀNH THẺ <a> VÀ BỎ LINK -->
+      <a href="../admin/category-add.html" class="btn-primary">+ Thêm loại</a>
+      
+    </header>
+
+    <section class="table-section">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Mã loại</th>
+            <th>Tên loại</th>
+            <th>Mô tả</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>L01</td>
+            <td>Gà rán</td>
+            <td>Các món gà chiên giòn, hương vị đậm đà</td>
+            <td><span class="status active">Đang hiển thị</span></td>
+            <td>
+              <div class="actions">
+                <a href="../admin/category-edit.html" class="btn-edit">Sửa</a>
+                <a href="#" class="btn-hide">Ẩn</a>
+                <a href="#" class="btn-delete">Xóa</a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>L02</td>
+            <td>Burger</td>
+            <td>Bánh mì kẹp thịt bò, gà hoặc cá, kèm rau và sốt đặc trưng</td>
+            <td><span class="status active">Đang hiển thị</span></td>
+            <td>
+              <div class="actions">
+                <a href="../admin/category-edit.html" class="btn-edit">Sửa</a>
+                <a href="#" class="btn-hide">Ẩn</a>
+                <a href="#" class="btn-delete">Xóa</a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>L03</td>
+            <td>Combo ăn trưa</td>
+            <td>Set combo tiết kiệm</td>
+            <td><span class="status hidden">Đang ẩn</span></td>
+            <td>
+              <div class="actions">
+                <a href="../admin/category-edit.html" class="btn-edit">Sửa</a>
+                <a href="#" class="btn-show">Hiện</a>
+                <a href="#" class="btn-delete">Xóa</a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>L04</td>
+            <td>Mỳ ý</td>
+            <td>Mì sốt cà chua, kem hoặc bò bằm mang hương vị Ý</td>
+            <td><span class="status active">Đang hiển thị</span></td>
+            <td>
+              <div class="actions">
+                <a href="../admin/category-edit.html" class="btn-edit">Sửa</a>
+                <a href="#" class="btn-hide">Ẩn</a>
+                <a href="#" class="btn-delete">Xóa</a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>L05</td>
+            <td>Pizza</td>
+            <td>Kéo sợi phô mai, tròn vị hạnh phúc</td>
+            <td><span class="status active">Đang hiển thị</span></td>
+            <td>
+              <div class="actions">
+                <a href="../admin/category-edit.html" class="btn-edit">Sửa</a>
+                <a href="#" class="btn-hide">Ẩn</a>
+                <a href="#" class="btn-delete">Xóa</a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>L06</td>
+            <td>Món ăn kèm</td>
+            <td>Khoai tây chiên, salad, súp </td>
+            <td><span class="status active">Đang hiển thị</span></td>
+            <td>
+              <div class="actions">
+                <a href="../admin/category-edit.html" class="btn-edit">Sửa</a>
+                <a href="#" class="btn-hide">Ẩn</a>
+                <a href="#" class="btn-delete">Xóa</a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>L07</td>
+            <td>Đồ uống</td>
+            <td>Thức uống mát lạnh, đa dạng hương vị</td>
+            <td><span class="status active">Đang hiển thị</span></td>
+            <td>
+              <div class="actions">
+                <a href="../admin/category-edit.html" class="btn-edit">Sửa</a>
+                <a href="#" class="btn-hide">Ẩn</a>
+                <a href="#" class="btn-delete">Xóa</a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>L08</td>
+            <td>Tráng miệng</td>
+            <td>Ngọt ngào nhẹ nhàng với kem, bánh và donut </td>
+            <td><span class="status hidden">Đang hiển thị</span></td>
+            <td>
+              <div class="actions">
+                <a href="../admin/category-edit.html" class="btn-edit">Sửa</a>
+                <a href="#" class="btn-show">Hiện</a>
+                <a href="#" class="btn-delete">Xóa</a>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>
+

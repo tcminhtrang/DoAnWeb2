@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ <link rel="icon" type="image/png" href="/assets/images/logo-1.png" />
+  
+   <title>ChickenJoy Admin | Chi tiết phiếu nhập</title>
+ 
+  <link rel="stylesheet" href="/assets/css/admin.css" />
+</head>
+<body class="admin-body">
+  
+   <aside class="sidebar">
+  <div class="sidebar-header">
+   <img src="/assets/images/logo.png" alt="Logo" class="logo-img">
+   <h2><span> ChickenJoy</span></h2>
+  </div>
+  <nav class="sidebar-menu">
+   <a href="../admin/dashboard.html"> 
+    <img src="/assets/images/icons/home.png" alt="Trang chủ">
+    <span>Trang chủ</span>
+   </a>
+   <a href="../admin/user-management.html" > 
+    <img src="/assets/images/icons/user-add.png" alt="Quản lý người dùng">
+    <span>Quản lý người dùng</span>
+   </a>
+   </a>
+     <a href="../admin/category.html">
+      <img src="/assets/images/icons/burger.png" alt="Loại sản phẩm">
+      <span>Loại sản phẩm</span>
+    </a>
+    <a href="../admin/list.html">
+      <img src="/assets/images/icons/app.png" alt="Danh mục sản phẩm">
+      <span>Danh mục sản phẩm</span>
+    </a>
+    <a href="../admin/import.html" class="active"> 
+      <img src="/assets/images/icons/import.png" alt="Nhập hàng">
+      <span>Nhập hàng</span>
+    </a>
+
+   <a href="../admin/price.html"> 
+    <img src="/assets/images/icons/dollar.png" alt="Giá bán">
+    <span>Giá bán</span>
+   </a>
+   <a href="../admin/order-management.html" > 
+    <img src="/assets/images/icons/order-history.png" alt="Quản lý đơn đặt hàng">
+    <span>Quản lý đơn đặt hàng</span>
+   </a>
+   <a href="../admin/inventory.html"> 
+    <img src="/assets/images/icons/inventory-alt.png" alt="Quản lý tồn kho">
+    <span>Quản lý tồn kho</span>
+   </a>
+   <div class="sidebar-footer">
+  <a href="../index.html" class="logout-btn">
+    <span>Đăng xuất</span>
+  </a>
+ </div>
+  </nav>
+ </aside>
+  
+   <main class="main-content">
+  <header class="main-header">
+         <h1>Chi tiết phiếu nhập (PN003)</h1>
+        <a href="import.html" class="btn-primary" style="background: #6c757d;">Quay lại</a>
+        </header>
+
+      <div class="detail-card" style="margin-bottom: 25px; background: #fdfdfd;">
+        <p><strong>Mã Phiếu:</strong> PN003</p>
+        <p><strong>Ngày Nhập:</strong> 01/11/2025</p>
+        <p><strong>Tổng Tiền:</strong> 5.000.000đ</p>
+        <p><strong>Trạng thái:</strong> <span class="status done">Đã hoàn thành</span></p>
+        <p><strong>Nhà cung cấp:</strong> Công ty TNHH Thực Phẩm Sạch ABC</p>
+        <p><strong>Người tạo phiếu:</strong> admin</p>
+      </div>
+      <h2 style="padding: 0 20px; color: var(--main-color); font-size: 20px;">Danh sách sản phẩm đã nhập</h2>
+   <section class="table-section">
+      <table class="data-table">
+    <thead>
+     <tr>
+      <th>Mã Nguyên Liệu</th>
+      <th>Tên Nguyên Liệu</th>
+      <th>Đơn vị</th>
+            <th>Số lượng</th>
+            <th>Đơn giá</th>
+            <th>Thành tiền</th>
+     </tr>
+    </thead>
+    <tbody>
+     <tr>
+      <td>NL001</td>
+      <td>Ức gà phi lê</td>
+      <td>kg</td>
+            <td>20</td>
+            <td>100.000đ</td>
+            <td>2.000.000đ</td>
+     </tr>
+     <tr>
+      <td>NL015</td>
+      <td>Khoai tây (loại 1)</td>
+      <td>kg</td>
+            <td>50</td>
+            <td>30.000đ</td>
+            <td>1.500.000đ</td>
+     </tr>
+     <tr>
+      <td>NL040</td>
+      <td>Sốt BBQ</td>
+      <td>thùng</td>
+            <td>3</td>
+            <td>500.000đ</td>
+            <td>1.500.000đ</td>
+     </tr>
+          <tr style="font-weight: bold; background: #fdfdfd;">
+            <td colspan="5" style="text-align: left; font-size: 16px;">TỔNG CỘNG:</td>
+            <td style="text-align: mid;font-size: 16px; color: var(--main-color);">5.000.000đ</td>
+          </tr>
+    </tbody>
+   </table>
+  </section>
+ </main>
+</body>
+</html>
