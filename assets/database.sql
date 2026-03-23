@@ -2,7 +2,6 @@ DROP DATABASE IF EXISTS `chickenjoy`;
 CREATE DATABASE `chickenjoy` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `chickenjoy`;
 
--- 1. CÁC BẢNG ĐỘC LẬP (Tạo trước)
 CREATE TABLE `categories` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `category_code` VARCHAR(20) NOT NULL UNIQUE, 
@@ -50,32 +49,30 @@ INSERT INTO `import_receipts` (`id`, `receipt_code`, `import_date`, `total_amoun
 (2, 'PN002', '2025-10-25', 3200000.00, 'completed'),
 (3, 'PN003', '2025-11-01', 5000000.00, 'completed');
 
--- 2. BẢNG PRODUCTS (Gộp chuẩn 100% của User + Thêm cột cho Admin)
 CREATE TABLE `products` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `product_code` varchar(20) UNIQUE DEFAULT NULL,  -- Thêm cho admin
-  `category_id` int(11) DEFAULT 1,                 -- Thêm cho admin
-  `product_name` varchar(255) NOT NULL,            -- Của User
-  `category` varchar(100) NOT NULL,                -- Của User
-  `description` text DEFAULT NULL,                 -- Của User
-  `unit` varchar(50) NOT NULL DEFAULT 'Phần',      -- Thêm cho admin
-  `import_price` decimal(15, 2) DEFAULT 0.00,      -- Của User
-  `profit_rate` decimal(5, 2) DEFAULT 0.20,        -- Của User (Đã đổi thành 0.20 theo chuẩn User)
-  `price` decimal(15, 2) NOT NULL,                 -- Của User
-  `stock` int(11) DEFAULT 0,                       -- Của User
-  `calories` int(11) DEFAULT 0,                    -- Của User
-  `protein` int(11) DEFAULT 0,                     -- Của User
-  `carbs` int(11) DEFAULT 0,                       -- Của User
-  `fat` int(11) DEFAULT 0,                         -- Của User
-  `image` varchar(255) DEFAULT 'default.jpg',      -- Của User
-  `is_new` tinyint(1) DEFAULT 0,                   -- Của User
-  `status` ENUM('active', 'hidden') DEFAULT 'active', -- Thêm cho admin
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(), -- Của User
+  `product_code` varchar(20) UNIQUE DEFAULT NULL,  
+  `category_id` int(11) DEFAULT 1,                 
+  `product_name` varchar(255) NOT NULL,            
+  `category` varchar(100) NOT NULL,                
+  `description` text DEFAULT NULL,                 
+  `unit` varchar(50) NOT NULL DEFAULT 'Phần',      
+  `import_price` decimal(15, 2) DEFAULT 0.00,      
+  `profit_rate` decimal(5, 2) DEFAULT 0.20,        
+  `price` decimal(15, 2) NOT NULL,                 
+  `stock` int(11) DEFAULT 0,                       
+  `calories` int(11) DEFAULT 0,                    
+  `protein` int(11) DEFAULT 0,                     
+  `carbs` int(11) DEFAULT 0,                       
+  `fat` int(11) DEFAULT 0,                         
+  `image` varchar(255) DEFAULT 'default.jpg',      
+  `is_new` tinyint(1) DEFAULT 0,                   
+  `status` ENUM('active', 'hidden') DEFAULT 'active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
--- Chèn dữ liệu (Đã đổi category thành mã viết liền và profit_rate thành số thập phân)
 INSERT INTO `products` (`id`, `product_code`, `category_id`, `product_name`, `category`, `description`, `unit`, `import_price`, `profit_rate`, `price`, `stock`, `calories`, `protein`, `carbs`, `fat`, `image`, `is_new`, `status`) VALUES
 (1, 'SP001', 1, 'Gà rán giòn tan', 'GaRan', 'Gà được tẩm ướp vị đặc biệt, chiên giòn vàng ươm', 'Miếng', 50000, 0.78, 89000, 50, 320, 25, 12, 18, 'ga-ran-4.jpg', 1, 'active'),
 (2, 'SP002', 1, 'Gà rán Hàn Quốc', 'GaRan', 'Gà rán theo cách Hàn Quốc với sốt đặc trưng', 'Phần', 70000, 0.70, 119000, 30, 350, 23, 15, 20, 'ga-ran-2.jpg', 1, 'active'),
@@ -100,7 +97,6 @@ INSERT INTO `products` (`id`, `product_code`, `category_id`, `product_name`, `ca
 (21, 'SP021', 7, 'Pepsi', 'NuocUong', 'Nước giải khát phổ biến toàn thế giới', 'Ly', 8000, 0.87, 15000, 150, 140, 0, 39, 0, 'pepsi.png', 0, 'active'),
 (22, 'SP022', 7, 'Trà sữa Chicken Joy', 'NuocUong', 'Trà sữa trân châu đậm vị, béo ngậy', 'Ly', 20000, 0.75, 35000, 30, 250, 2, 45, 8, 'trasua.png', 1, 'active');
 
--- 3. CÁC BẢNG LIÊN QUAN ĐẾN ĐƠN HÀNG (Giữ y nguyên của User)
 CREATE TABLE `import_receipt_details` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `receipt_id` INT(11) NOT NULL,               
