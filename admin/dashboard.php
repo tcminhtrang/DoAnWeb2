@@ -1,30 +1,57 @@
 <?php
-require_once '../config/connect.php';
+require_once '../config/database.php';
 
-// 1. LẤY SỐ LIỆU CHO 4 THẺ THỐNG KÊ (CARDS)
-// a. Tổng doanh thu hôm nay
 $sql_doanh_thu = "SELECT SUM(total_price) as tong_tien FROM orders WHERE DATE(order_date) = CURDATE() AND status IN ('delivered', 'shipped')";
 $res_doanh_thu = $conn->query($sql_doanh_thu);
 $doanh_thu = $res_doanh_thu->fetch_assoc()['tong_tien'] ?? 0;
 
-// b. Đơn hàng mới (chờ xử lý)
 $sql_don_hang = "SELECT COUNT(*) as so_don FROM orders WHERE status = 'pending'";
 $res_don_hang = $conn->query($sql_don_hang);
 $don_moi = $res_don_hang->fetch_assoc()['so_don'] ?? 0;
 
-// c. Sản phẩm sắp hết hàng (Tồn kho dưới 10 - ĐÁP ỨNG TIÊU CHÍ CHẤM ĐIỂM)
 $sql_ton_kho = "SELECT COUNT(*) as sap_het FROM products WHERE stock < 10 AND status = 'active'";
 $res_ton_kho = $conn->query($sql_ton_kho);
 $sap_het = $res_ton_kho->fetch_assoc()['sap_het'] ?? 0;
 
-// d. Khách hàng (Users)
 $sql_khach = "SELECT COUNT(*) as so_khach FROM users WHERE role = 'user'";
 $res_khach = $conn->query($sql_khach);
 $khach_hang = $res_khach->fetch_assoc()['so_khach'] ?? 0;
 
-// 2. LẤY 5 ĐƠN HÀNG GẦN ĐÂY NHẤT
 $sql_recent_orders = "SELECT * FROM orders ORDER BY order_date DESC LIMIT 5";
 $result_recent_orders = $conn->query($sql_recent_orders);
+$revenue_7_days = [];
+$max_revenue = 0;
+for ($i = 6; $i >= 0; $i--) {
+    $date = date('Y-m-d', strtotime("-$i days"));
+    $day_of_week = date('N', strtotime("-$i days"));
+    $labels = [1 => 'T2', 2 => 'T3', 3 => 'T4', 4 => 'T5', 5 => 'T6', 6 => 'T7', 7 => 'CN'];
+    $label = $labels[$day_of_week];
+    $revenue_7_days[$date] = [
+        'label' => $label,
+        'total' => 0
+    ];
+}
+
+$start_date = date('Y-m-d', strtotime("-6 days"));
+$end_date = date('Y-m-d');
+$sql_chart = "SELECT DATE(order_date) as order_day, SUM(total_price) as daily_total 
+              FROM orders 
+              WHERE DATE(order_date) BETWEEN '$start_date' AND '$end_date' 
+              AND status IN ('delivered', 'shipped')
+              GROUP BY DATE(order_date)";
+$res_chart = $conn->query($sql_chart);
+
+if ($res_chart && $res_chart->num_rows > 0) {
+    while($row = $res_chart->fetch_assoc()) {
+        $day = $row['order_day'];
+        if (isset($revenue_7_days[$day])) {
+            $revenue_7_days[$day]['total'] = $row['daily_total'];
+            if ($row['daily_total'] > $max_revenue) {
+                $max_revenue = $row['daily_total'];
+            }
+        }
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -33,7 +60,7 @@ $result_recent_orders = $conn->query($sql_recent_orders);
  <meta charset="UTF-8" />
  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
  <link rel="icon" type="image/png" href="../assets/images/logo-1.png" />
- <title> ChickenJoy Admin | Dashboard</title>
+ <title>ChickenJoy Admin | Dashboard</title>
  <link rel="stylesheet" href="../assets/css/admin.css" />
 </head>
 <body class="admin-body">
@@ -77,18 +104,28 @@ $result_recent_orders = $conn->query($sql_recent_orders);
   <h2 class="section-title">Doanh thu 7 ngày qua</h2>
   <section class="table-section" style="margin-top: 25px; margin-bottom: 15px;">
       <div class="chart-container">
-        <div class="chart-bar" style="height: 60%;"><span class="chart-value">1.2tr</span><span class="chart-label">T2</span></div>
-        <div class="chart-bar" style="height: 80%;"><span class="chart-value">1.8tr</span><span class="chart-label">T3</span></div>
-        <div class="chart-bar" style="height: 50%;"><span class="chart-value">1.0tr</span><span class="chart-label">T4</span></div>
-        <div class="chart-bar" style="height: 70%;"><span class="chart-value">1.5tr</span><span class="chart-label">T5</span></div>
-        <div class="chart-bar" style="height: 90%;"><span class="chart-value">2.1tr</span><span class="chart-label">T6</span></div>
-        <div class="chart-bar" style="height: 100%;"><span class="chart-value">2.5tr</span><span class="chart-label">T7</span></div>
-        <div class="chart-bar" style="height: 65%;"><span class="chart-value">1.3tr</span><span class="chart-label">CN</span></div>
+        <?php foreach ($revenue_7_days as $date => $data): 
+            $height_percent = ($max_revenue > 0) ? round(($data['total'] / $max_revenue) * 100) : 0;
+            $display_height = $height_percent > 0 ? $height_percent : 2; 
+            $val = $data['total'];
+            if ($val >= 1000000) {
+                $display_val = round($val / 1000000, 1) . 'tr';
+            } elseif ($val >= 1000) {
+                $display_val = round($val / 1000) . 'k';
+            } else {
+                $display_val = '0đ';
+            }
+        ?>
+            <div class="chart-bar" style="height: <?php echo $display_height; ?>%;" title="<?php echo date('d/m/Y', strtotime($date)); ?>: <?php echo number_format($val, 0, ',', '.'); ?>đ">
+                <span class="chart-value"><?php echo $display_val; ?></span>
+                <span class="chart-label"><?php echo $data['label']; ?></span>
+            </div>
+        <?php endforeach; ?>
       </div>
-    </section>
+  </section>
 
-    <h2 class="section-title">Đơn hàng gần đây</h2>
-    <section class="table-section"> 
+  <h2 class="section-title">Đơn hàng gần đây</h2>
+  <section class="table-section"> 
       <table class="data-table">
         <thead>
           <tr>
@@ -103,7 +140,6 @@ $result_recent_orders = $conn->query($sql_recent_orders);
           <?php
           if ($result_recent_orders && $result_recent_orders->num_rows > 0) {
               while($row = $result_recent_orders->fetch_assoc()) {
-                  // Xác định class màu sắc dựa trên trạng thái
                   $status_class = '';
                   $status_text = '';
                   switch($row['status']) {
@@ -128,7 +164,7 @@ $result_recent_orders = $conn->query($sql_recent_orders);
           ?>
         </tbody>
       </table>
-    </section>
+  </section>
  </main>
 </body>
 </html>

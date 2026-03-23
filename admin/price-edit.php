@@ -1,7 +1,6 @@
 <?php
-require_once '../config/connect.php';
+require_once '../config/database.php';
 
-// 1. LẤY THÔNG TIN SẢN PHẨM CŨ
 if (isset($_GET['id'])) {
     $id = $_GET['id'];
     $sql_get = "SELECT * FROM products WHERE id = $id";
@@ -18,12 +17,13 @@ if (isset($_GET['id'])) {
     exit();
 }
 
-// 2. LƯU KHI ĐỔI % LỢI NHUẬN
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $loi_nhuan_moi = $_POST['profit_rate'];
+    $loi_nhuan_nhap_vao = $_POST['profit_rate'];
+    
+    $loi_nhuan_luu_db = $loi_nhuan_nhap_vao / 100; 
     $gia_ban_moi = $_POST['price'];
 
-    $sql_update = "UPDATE products SET profit_rate = $loi_nhuan_moi, price = $gia_ban_moi WHERE id = $id";
+    $sql_update = "UPDATE products SET profit_rate = $loi_nhuan_luu_db, price = $gia_ban_moi WHERE id = $id";
 
     if ($conn->query($sql_update) === TRUE) {
         header("Location: price.php");
@@ -71,7 +71,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <div class="form-group">
           <label for="prod-profit">Phần trăm lợi nhuận (%):</label>
-          <input type="number" id="prod-profit" name="profit_rate" value="<?php echo (int)$product['profit_rate']; ?>" required>
+          <input type="number" id="prod-profit" name="profit_rate" value="<?php echo (float)$product['profit_rate'] * 100; ?>" required>
         </div>
         
         <div class="form-group">

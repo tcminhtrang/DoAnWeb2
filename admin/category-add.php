@@ -1,5 +1,5 @@
 <?php
-require_once '../config/connect.php';
+require_once '../config/database.php';
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $ma_loai = $_POST['category-id'];
     $ten_loai = $_POST['category-name'];
@@ -29,41 +29,41 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   <?php include 'layout/sidebar.php'; ?>
   <main class="main-content">
   <header class="main-header">
-      <h1>Thêm sản phẩm mới</h1>
-      <a href="list.html" class="btn-primary" style="background: #6c757d;">Quay lại</a>
+      <h1>Thêm loại sản phẩm mới</h1>
+      <a href="category.php" class="btn-primary" style="background: #6c757d;">Quay lại</a>
     </header>
 
     <section class="form-section">
-   <form action="#" method="POST" class="data-form">
+      <form action="" method="POST" class="data-form">
         <div class="form-group">
-     <label for="category-id">Mã loại:</label>
-     <input type="text" id="category-id" name="category-id" placeholder="Ví dụ: L01">
-    </div>
+          <label for="category-id">Mã loại:</label>
+          <input type="text" id="category-id" name="category-id" placeholder="Ví dụ: L01" required>
+        </div>
 
         <div class="form-group">
-     <label for="category-name">Tên loại:</label>
-     <input type="text" id="category-name" name="category-name" placeholder="Ví dụ: Gà rán" required>
-    </div>
+          <label for="category-name">Tên loại:</label>
+          <input type="text" id="category-name" name="category-name" placeholder="Ví dụ: Gà rán" required>
+        </div>
 
         <div class="form-group">
-     <label for="category-desc">Mô tả:</label>
-     <textarea id="category-desc" name="category-desc" rows="4" placeholder="Mô tả ngắn về loại sản phẩm"></textarea>
-    </div>
+          <label for="category-desc">Mô tả:</label>
+          <textarea id="category-desc" name="category-desc" rows="4" placeholder="Mô tả ngắn về loại sản phẩm"></textarea>
+        </div>
 
         <div class="form-group">
-     <label for="category-status">Trạng thái:</label>
-     <select id="category-status" name="category-status">
-      <option value="active" selected>Đang hiển thị</option>
-      <option value="hidden">Ẩn</option>
-     </select>
-    </div>
+          <label for="category-status">Trạng thái:</label>
+          <select id="category-status" name="category-status">
+            <option value="active" selected>Đang hiển thị</option>
+            <option value="hidden">Ẩn</option>
+          </select>
+        </div>
 
         <div class="form-actions">
-          <a href="category.html" class="btn-primary">Lưu</a>
-          <a href="category.html" class="btn-cancel">Hủy</a>
-    </div>
-   </form>
-  </section>
+          <button type="submit" class="btn-primary">Lưu</button>
+          <a href="category.php" class="btn-cancel">Hủy</a>
+        </div>
+      </form>
+    </section>
  </main>
 </body>
 </html>

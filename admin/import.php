@@ -1,12 +1,12 @@
 <?php
-  require_once '../config/connect.php';
+  require_once '../config/database.php';
   $search = "";
   if (isset($_GET['search']) && $_GET['search'] != '') {
       $search = $_GET['search'];
       $search_escaped = $conn->real_escape_string($search);
-      $sql = "SELECT * FROM import_receipts WHERE receipt_code LIKE '%$search_escaped%' ORDER BY id ASC";
+      $sql = "SELECT * FROM import_receipts WHERE receipt_code LIKE '%$search_escaped%' ORDER BY id DESC";
   } else {
-      $sql = "SELECT * FROM import_receipts ORDER BY id ASC";
+      $sql = "SELECT * FROM import_receipts ORDER BY id DESC";
   }
   
   $result = $conn->query($sql);
@@ -32,7 +32,6 @@
       <form action="import.php" method="GET" style="display: flex; gap: 10px;">
         <input type="text" name="search" value="<?php echo $search; ?>" placeholder="🔍 Tìm theo Mã Phiếu..." style="padding: 8px; width: 1100px; border: 1px solid #ccc; border-radius: 4px;">
         <button type="submit" class="btn-primary" style="padding: 8px 15px;">Tìm kiếm</button>
-        
         <?php if($search != '') { ?>
           <a href="import.php" class="btn-cancel" style="padding: 8px 15px; text-decoration: none; background: #6c757d; color: white; border-radius: 4px;">Hủy lọc</a>
         <?php } ?>
@@ -54,31 +53,24 @@
   <?php
   if ($result && $result->num_rows > 0) {
       while($row = $result->fetch_assoc()) {
-          
-          $status_class = ($row['status'] == 'completed') ? 'active' : 'hidden';
+          $status_class = ($row['status'] == 'completed') ? 'active' : 'new';
           $status_text = ($row['status'] == 'completed') ? 'Hoàn thành' : 'Đang xử lý';
 
           echo "<tr>";
             echo "<td>" . $row['receipt_code'] . "</td>";
-            
-            $formatted_date = date('d/m/Y', strtotime($row['import_date']));
-            echo "<td>" . $formatted_date . "</td>";
-            
-            $formatted_money = number_format($row['total_amount'], 0, ',', '.');
-            echo "<td>" . $formatted_money . " VNĐ</td>";
-            
+            echo "<td>" . date('d/m/Y', strtotime($row['import_date'])) . "</td>";
+            echo "<td>" . number_format($row['total_amount'], 0, ',', '.') . " VNĐ</td>";
             echo "<td><span class='status " . $status_class . "'>" . $status_text . "</span></td>";
-            
-            echo "<td>
-                    <div class='actions'>
-                      <a href='import-detail.php?id=" . $row['id'] . "' class='btn-edit'>Chi tiết</a>
-                      <a href='import-delete.php?id=" . $row['id'] . "' class='btn-delete' onclick='return confirm(\"Cảnh báo: Bạn có chắc chắn muốn xóa dữ liệu này không?\");'>Xóa</a>
-                    </div>
-                  </td>";
-          echo "</tr>";
+            echo "<td><div class='actions' style='display: flex; gap: 5px;'>";
+            echo "<a href='import-detail.php?id=" . $row['id'] . "' class='btn-action-primary' style='background: #17a2b8;'>Chi tiết</a>";
+            if ($row['status'] == 'pending') {
+                echo "<a href='import-edit.php?id=" . $row['id'] . "' class='btn-edit ' '>Sửa</a>";
+                echo "<a href='import-delete.php?id=" . $row['id'] . "' class='btn-delete' onclick='return confirm(\"Xóa phiếu nhập đang xử lý này?\");'>Xóa</a>";
+            }
+            echo "</div></td></tr>";
       }
   } else {
-      echo "<tr><td colspan='5' style='text-align:center;'>Không tìm thấy phiếu nhập nào phù hợp!</td></tr>";
+      echo "<tr><td colspan='5' style='text-align:center;'>Không tìm thấy phiếu nhập nào!</td></tr>";
   }
   ?>
         </tbody>

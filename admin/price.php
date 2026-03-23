@@ -1,8 +1,13 @@
 <?php
-require_once '../config/connect.php';
+require_once '../config/database.php';
 
-// Lấy danh sách sản phẩm cùng với giá vốn và giá bán
-$sql = "SELECT id, product_code, product_name, import_price, profit_rate, price FROM products ORDER BY id ASC";
+$search = "";
+if (isset($_GET['search']) && $_GET['search'] != '') {
+    $search = $conn->real_escape_string($_GET['search']);
+    $sql = "SELECT id, product_code, product_name, import_price, profit_rate, price FROM products WHERE product_code LIKE '%$search%' OR product_name LIKE '%$search%' ORDER BY id ASC";
+} else {
+    $sql = "SELECT id, product_code, product_name, import_price, profit_rate, price FROM products ORDER BY id ASC";
+}
 $result = $conn->query($sql);
 ?>
 <!DOCTYPE html>
@@ -21,9 +26,17 @@ $result = $conn->query($sql);
     <header class="main-header">
       <h1>Quản lý giá bán</h1>
     </header>
+    
     <div class="table-toolbar">
-      <input type="text" placeholder="🔍 Tìm theo mã sản phẩm...">
+      <form action="price.php" method="GET" style="display: flex; gap: 10px;">
+        <input type="text" name="search" value="<?php echo $search; ?>" placeholder="🔍 Tìm theo mã sản phẩm..." style="padding: 8px; width: 1100px; border: 1px solid #ccc; border-radius: 4px;">
+        <button type="submit" class="btn-primary" style="padding: 8px 15px;">Tìm kiếm</button>
+        <?php if($search != '') { ?>
+          <a href="price.php" class="btn-cancel" style="padding: 8px 15px; text-decoration: none; background: #6c757d; color: white; border-radius: 4px;">Hủy lọc</a>
+        <?php } ?>
+      </form>
     </div>
+
     <section class="table-section">
       <table class="data-table">
         <thead>
@@ -44,16 +57,12 @@ $result = $conn->query($sql);
                     echo "<td>" . $row['product_code'] . "</td>";
                     echo "<td>" . $row['product_name'] . "</td>";
                     
-                    // Hiển thị Giá nhập
                     echo "<td class='text-center'>" . number_format($row['import_price'], 0, ',', '.') . "đ</td>";
+                    $loi_nhuan_hien_thi = $row['profit_rate'] * 100;
+                    echo "<td class='text-center'><span style='color: #008000; font-weight: 500;'>" . $loi_nhuan_hien_thi . "%</span></td>";
                     
-                    // Hiển thị % Lợi nhuận
-                    echo "<td class='text-center'><span style='color: #008000; font-weight: 500;'>" . $row['profit_rate'] . "%</span></td>";
-                    
-                    // Hiển thị Giá bán
                     echo "<td class='text-center' style='font-weight: bold;'>" . number_format($row['price'], 0, ',', '.') . "đ</td>";
                     
-                    // Nút Sửa giá (truyền ID)
                     echo "<td>
                             <div class='actions'>
                               <a href='price-edit.php?id=" . $row['id'] . "' class='btn-edit'>Sửa giá</a>
@@ -62,7 +71,7 @@ $result = $conn->query($sql);
                   echo "</tr>";
               }
           } else {
-              echo "<tr><td colspan='6' class='text-center'>Chưa có sản phẩm nào!</td></tr>";
+              echo "<tr><td colspan='6' class='text-center'>Không tìm thấy sản phẩm!</td></tr>";
           }
           ?>
         </tbody>

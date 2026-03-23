@@ -1,10 +1,18 @@
 <?php
-require_once '../config/connect.php';
-  $sql = "SELECT p.*, c.category_name 
-          FROM products p 
-          JOIN categories c ON p.category_id = c.id 
-          ORDER BY p.id ASC";
-  $result = $conn->query($sql);
+require_once '../config/database.php';
+
+$search = "";
+if (isset($_GET['search']) && $_GET['search'] != '') {
+    $search = $conn->real_escape_string($_GET['search']);
+    $sql = "SELECT p.*, c.category_name 
+            FROM products p 
+            JOIN categories c ON p.category_id = c.id 
+            WHERE p.product_name LIKE '%$search%' OR p.product_code LIKE '%$search%'
+            ORDER BY p.id ASC";
+} else {
+    $sql = "SELECT p.*, c.category_name FROM products p JOIN categories c ON p.category_id = c.id ORDER BY p.id ASC";
+}
+$result = $conn->query($sql);
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -23,6 +31,16 @@ require_once '../config/connect.php';
       <a href="../admin/list-add.php" class="btn-primary">+ Thêm sản phẩm</a>
     </header>
 
+    <div class="table-toolbar">
+      <form action="list.php" method="GET" style="display: flex; gap: 10px;">
+        <input type="text" name="search" value="<?php echo $search; ?>" placeholder="🔍 Tìm theo Tên hoặc Mã SP..." style="padding: 8px; width: 1100px; border: 1px solid #ccc; border-radius: 4px;">
+        <button type="submit" class="btn-primary" style="padding: 8px 15px;">Tìm kiếm</button>
+        <?php if($search != '') { ?>
+          <a href="list.php" class="btn-cancel" style="padding: 8px 15px; text-decoration: none; background: #6c757d; color: white; border-radius: 4px;">Hủy lọc</a>
+        <?php } ?>
+      </form>
+    </div>
+
     <section class="table-section">
       <table class="data-table">
         <thead>
@@ -37,46 +55,39 @@ require_once '../config/connect.php';
           </tr>
         </thead>
         <tbody>
-          <tbody>
-  <?php
-  if ($result->num_rows > 0) {
-      while($row = $result->fetch_assoc()) {
-          
-          $status_class = ($row['status'] == 'active') ? 'active' : 'hidden';
-          $status_text = ($row['status'] == 'active') ? 'Đang hiển thị' : 'Đang ẩn';
+          <?php
+          if ($result && $result->num_rows > 0) {
+              while($row = $result->fetch_assoc()) {
+                  $status_class = ($row['status'] == 'active') ? 'active' : 'hidden';
+                  $status_text = ($row['status'] == 'active') ? 'Đang bán' : 'Đang ẩn';
 
-          echo "<tr>";
-            echo "<td>" . $row['product_code'] . "</td>";
-            
-            // Cột hình ảnh: Lấy tên file ảnh từ CSDL ghép vào đường dẫn
-            echo "<td><img src='../assets/images/products/" . $row['image'] . "' alt='Thumb' class='thumb' style='width: 50px; height: 50px; object-fit: cover;'></td>";
-            
-            echo "<td>" . $row['product_name'] . "</td>";
-            
-            // Cột Tên Loại: Cột này lấy được là nhờ lệnh JOIN ở Bước 1
-            echo "<td>" . $row['category_name'] . "</td>"; 
-            
-            echo "<td>" . $row['description'] . "</td>";
-            echo "<td><span class='status " . $status_class . "'>" . $status_text . "</span></td>";
-            
-            // Các nút thao tác
-            echo "<td>
-                    <div class='actions'>
-                      <a href='list-edit.php?id=" . $row['id'] . "' class='btn-edit'>Sửa</a>
-                      <a href='list-delete.php?id=" . $row['id'] . "' class='btn-delete' onclick='return confirm(\"Cảnh báo: Bạn có chắc chắn muốn ẩn sản phẩm này không?\");'>Ẩn</a>
-                    </div>
-                  </td>";
-          echo "</tr>";
-      }
-  } else {
-      echo "<tr><td colspan='7' style='text-align:center;'>Chưa có sản phẩm nào!</td></tr>";
-  }
-  ?>
-</tbody>
+                  echo "<tr>";
+                    echo "<td>" . $row['product_code'] . "</td>";
+                    echo "<td><img src='../assets/images/products/" . $row['image'] . "' alt='Thumb' class='thumb' style='width: 50px; height: 50px; object-fit: cover; border-radius: 4px;'></td>";
+                    echo "<td>" . $row['product_name'] . "</td>";
+                    echo "<td>" . $row['category_name'] . "</td>"; 
+                    echo "<td style='max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;'>" . $row['description'] . "</td>";
+                    echo "<td><span class='status " . $status_class . "'>" . $status_text . "</span></td>";
+                    
+                    echo "<td>
+                            <div class='actions'>
+                              <a href='list-edit.php?id=" . $row['id'] . "' class='btn-edit'>Sửa</a>";
+                    if ($row['status'] == 'active') {
+                        echo "<a href='list-delete.php?id=" . $row['id'] . "' class='btn-delete' onclick=\"return confirm('Bạn có muốn ẩn sản phẩm này không?');\">Ẩn</a>";
+                    } else {
+                        echo "<a href='list-restore.php?id=" . $row['id'] . "' class='btn-edit' style='background-color: #28a745; color: white;' onclick=\"return confirm('Khôi phục sản phẩm này?');\">Bật</a>";
+                    }
+                    echo "    </div>
+                          </td>";
+                  echo "</tr>";
+              }
+          } else {
+              echo "<tr><td colspan='7' style='text-align: center;'>Không tìm thấy sản phẩm!</td></tr>";
+          }
+          ?>
         </tbody>
       </table>
     </section>
   </main>
 </body>
 </html>
-

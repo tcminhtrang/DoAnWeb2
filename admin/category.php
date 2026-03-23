@@ -1,7 +1,14 @@
 <?php
-require_once '../config/connect.php';
-  $sql = "SELECT * FROM categories ORDER BY id DESC";
-  $result = $conn->query($sql);
+require_once '../config/database.php';
+
+$search = "";
+if (isset($_GET['search']) && $_GET['search'] != '') {
+    $search = $conn->real_escape_string($_GET['search']);
+    $sql = "SELECT * FROM categories WHERE category_code LIKE '%$search%' OR category_name LIKE '%$search%' ORDER BY id ASC";
+} else {
+    $sql = "SELECT * FROM categories ORDER BY id ASC";
+}
+$result = $conn->query($sql);
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -14,14 +21,21 @@ require_once '../config/connect.php';
 </head>
 <body class="admin-body">
   <?php include 'layout/sidebar.php'; ?>
-  <!-- ===== MAIN CONTENT ===== -->
   <main class="main-content">
     <header class="main-header">
       <h1>Quản lý loại sản phẩm</h1>
-      <!-- 3. SỬA THÀNH THẺ <a> VÀ BỎ LINK -->
       <a href="../admin/category-add.php" class="btn-primary">+ Thêm loại</a>
-      
     </header>
+
+    <div class="table-toolbar">
+      <form action="category.php" method="GET" style="display: flex; gap: 10px;">
+        <input type="text" name="search" value="<?php echo $search; ?>" placeholder="🔍 Tìm theo Tên hoặc Mã loại..." style="padding: 8px; width: 1100px; border: 1px solid #ccc; border-radius: 4px;">
+        <button type="submit" class="btn-primary" style="padding: 8px 15px;">Tìm kiếm</button>
+        <?php if($search != '') { ?>
+          <a href="category.php" class="btn-cancel" style="padding: 8px 15px; text-decoration: none; background: #6c757d; color: white; border-radius: 4px;">Hủy lọc</a>
+        <?php } ?>
+      </form>
+    </div>
 
     <section class="table-section">
       <table class="data-table">
@@ -34,42 +48,38 @@ require_once '../config/connect.php';
           </tr>
         </thead>
         <tbody>
-          <tbody>
-  <?php
-  // Kiểm tra xem trong kho có dữ liệu nào không (số dòng > 0)
-  if ($result->num_rows > 0) {
-      
-      // Dùng vòng lặp while: Lôi từng dòng dữ liệu trong kho ra cho đến khi hết
-      while($row = $result->fetch_assoc()) {
-          
-          // Xử lý nhỏ: Đổi chữ tiếng Anh trong CSDL thành tiếng Việt cho đẹp
-          $status_class = ($row['status'] == 'active') ? 'active' : 'hidden';
-          $status_text = ($row['status'] == 'active') ? 'Đang hiển thị' : 'Đang ẩn';
+          <?php
+          if ($result && $result->num_rows > 0) {
+              while($row = $result->fetch_assoc()) {
+                  $status_class = ($row['status'] == 'active') ? 'active' : 'hidden';
+                  $status_text = ($row['status'] == 'active') ? 'Đang hiển thị' : 'Đang ẩn';
 
-          // Bắt đầu in ra HTML
-          echo "<tr>";
-            echo "<td>" . $row['category_code'] . "</td>";     // Cột Mã loại
-            echo "<td>" . $row['category_name'] . "</td>";     // Cột Tên loại
-            echo "<td><span class='status " . $status_class . "'>" . $status_text . "</span></td>";
-            
-            // Cột Nút bấm Sửa/Xóa (Có nhúng sẵn ID để lát nữa biết bấm vào dòng nào)
-            echo "<td>
-                    <div class='actions'>
-                      <a href='category-edit.php?id=" . $row['id'] . "' class='btn-edit'>Sửa</a>
-                      <a href='category-delete.php?id=" . $row['id'] . "' class='btn-delete' onclick='return confirm(\"Cảnh báo: Bạn có chắc chắn muốn ẩn dữ liệu này không?\");'>Ẩn</a>
-                    </div>
-                  </td>";
-          echo "</tr>";
-      }
-  } else {
-      // Nếu kho trống thì in ra dòng này
-      echo "<tr><td colspan='5' style='text-align:center;'>Chưa có loại sản phẩm nào!</td></tr>";
-  }
-  ?>
+                  echo "<tr>";
+                    echo "<td>" . $row['category_code'] . "</td>";
+                    echo "<td>" . $row['category_name'] . "</td>";
+                    echo "<td><span class='status " . $status_class . "'>" . $status_text . "</span></td>";
+                    
+                    echo "<td>
+                            <div class='actions'>
+                              <a href='category-edit.php?id=" . $row['id'] . "' class='btn-edit'>Sửa</a>";
+                              
+                    if ($row['status'] == 'active') {
+                        echo "<a href='category-delete.php?id=" . $row['id'] . "' class='btn-delete' onclick=\"return confirm('Cảnh báo: Bạn có chắc chắn muốn ẩn dữ liệu này không?');\">Ẩn</a>";
+                    } else {
+                        echo "<a href='category-restore.php?id=" . $row['id'] . "' class='btn-edit' style='background-color: #28a745; color: white;' onclick=\"return confirm('Khôi phục loại sản phẩm này?');\">Bật</a>";
+                    }
+                    
+                    echo "    </div>
+                          </td>";
+                  echo "</tr>";
+              }
+          } else {
+              echo "<tr><td colspan='4' style='text-align: center;'>Không tìm thấy loại sản phẩm nào!</td></tr>";
+          }
+          ?>
         </tbody>
       </table>
     </section>
   </main>
 </body>
 </html>
-

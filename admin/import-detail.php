@@ -1,11 +1,9 @@
 <?php
-require_once '../config/connect.php';
+require_once '../config/database.php';
 
-// 1. CHỤP ID TỪ THANH ĐỊA CHỈ
 if (isset($_GET['id'])) {
     $id = $_GET['id'];
 
-    // Lấy thông tin CHUNG của phiếu nhập
     $sql_receipt = "SELECT * FROM import_receipts WHERE id = $id";
     $result_receipt = $conn->query($sql_receipt);
 
@@ -52,6 +50,7 @@ if (isset($_GET['id'])) {
           <?php 
             if($receipt['status'] == 'completed') echo '<span class="status active">Hoàn thành</span>';
             else echo '<span class="status hidden">Đang xử lý</span>';
+            
           ?>
         </p>
         <p><strong>Tổng tiền phiếu nhập:</strong> <span style="color: #e74c3c; font-size: 1.2em; font-weight: bold;"><?php echo number_format($receipt['total_amount'], 0, ',', '.'); ?> VNĐ</span></p>
@@ -77,8 +76,6 @@ if (isset($_GET['id'])) {
                       echo "<td>" . $row['product_name'] . "</td>";
                       echo "<td>" . $row['quantity'] . "</td>";
                       echo "<td>" . number_format($row['import_price'], 0, ',', '.') . " VNĐ</td>";
-                      
-                      // Cột Thành tiền = Số lượng * Đơn giá nhập
                       $subtotal = $row['quantity'] * $row['import_price'];
                       echo "<td><strong>" . number_format($subtotal, 0, ',', '.') . " VNĐ</strong></td>";
                     echo "</tr>";

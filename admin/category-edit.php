@@ -1,7 +1,6 @@
 <?php
 require_once '../config/connect.php';
 
-// 1. CHỤP ID TỪ THANH ĐỊA CHỈ & LẤY DỮ LIỆU CŨ HIỂN THỊ
 if (isset($_GET['id'])) {
     $id = $_GET['id'];
     
