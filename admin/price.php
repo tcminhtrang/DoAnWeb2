@@ -28,7 +28,7 @@ $result = $conn->query($sql);
     </header>
     
     <div class="table-toolbar">
-      <form action="price.php" method="GET" style="display: flex; gap: 10px;">
+      <form action="price.php" method="GET" style="display: flex; gap: 10px ">
         <input type="text" name="search" value="<?php echo $search; ?>" placeholder="🔍 Tìm theo mã sản phẩm..." style="padding: 8px; width: 1100px; border: 1px solid #ccc; border-radius: 4px;">
         <button type="submit" class="btn-primary" style="padding: 8px 15px;">Tìm kiếm</button>
         <?php if($search != '') { ?>

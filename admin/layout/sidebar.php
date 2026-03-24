@@ -28,7 +28,7 @@
         <img src="../assets/images/icons/import.png" alt="Nhập hàng">
         <span>Nhập hàng</span>
       </a>
-      <a href="../admin/price.php" class="<?php if($current_page == 'price.php') echo 'active'; ?>"> 
+      <a href="../admin/price.php" class="<?php if($current_page == 'price.php' || $current_page == 'price-edit.php') echo 'active'; ?>"> 
         <img src="../assets/images/icons/dollar.png" alt="Giá bán">
         <span>Giá bán</span>
       </a>
@@ -40,6 +40,17 @@
         <img src="../assets/images/icons/inventory-alt.png" alt="Quản lý tồn kho">
         <span>Quản lý tồn kho</span>
       </a>
+      
+      <a href="../admin/promotion.php" class="<?php if($current_page == 'promotion.php' || $current_page == 'promotion-add.php' || $current_page == 'promotion-edit.php') echo 'active'; ?>"> 
+        <img src="../assets/images/icons/promotions.png" alt="Quản lý khuyến mãi">
+        <span>Quản lý khuyến mãi</span>
+      </a>
+
+      <a href="../admin/report.php" class="<?php if($current_page == 'report.php') echo 'active'; ?>"> 
+        <img src="../assets/images/icons/report.png" alt="Báo cáo Doanh thu">
+        <span>Báo cáo Doanh thu</span>
+      </a>
+
       <div class="sidebar-footer">
         <a href="../index.html" class="logout-btn">
           <span>Đăng xuất</span>

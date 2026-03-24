@@ -23,7 +23,7 @@ document.getElementById("loginForm").addEventListener("submit", function(e) {
   const validPass = "Admin@2025";
 
   if (username === validUser && password === validPass) {
-    window.location.href = "admin/dashboard.html";
+    window.location.href = "../admin/dashboard.php";
   } else {
     error.textContent = "Sai tài khoản hoặc mật khẩu.";
   }
