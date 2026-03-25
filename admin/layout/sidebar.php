@@ -52,7 +52,7 @@
       </a>
 
       <div class="sidebar-footer">
-        <a href="../index.html" class="logout-btn">
+        <a href="../index.php" class="logout-btn">
           <span>Đăng xuất</span>
         </a>
       </div>

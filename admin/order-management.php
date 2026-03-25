@@ -25,7 +25,7 @@ $sql = "SELECT o.*, u.fullname
         FROM orders o
         JOIN users u ON o.user_id = u.id
         WHERE $where
-        ORDER BY o.ward ASC, o.order_date DESC";
+        ORDER BY o.id DESC";
 
 $result = mysqli_query($conn, $sql);
 ?>

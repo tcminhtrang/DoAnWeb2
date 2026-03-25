@@ -1,30 +1,28 @@
-const userInput = document.getElementById("username");
-const passInput = document.getElementById("password");
-const error = document.getElementById("errorMsg");
+document.addEventListener('DOMContentLoaded', function() {
+    var loginForm = document.getElementById('loginForm');
+    var errorMsg = document.getElementById('errorMsg');
 
-[userInput, passInput].forEach(input => {
-  input.addEventListener("input", () => error.textContent = "");
-});
+    loginForm.onsubmit = function(e) {
+        e.preventDefault();
+        var email = document.getElementById('email').value;
+        var password = document.getElementById('password').value;
 
-document.getElementById("loginForm").addEventListener("submit", function(e) {
-  e.preventDefault();
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'admin/auth.php', true);
+        xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
 
-  const username = userInput.value.trim();
-  const password = passInput.value.trim();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                var response = JSON.parse(xhr.responseText);
+                if (response.success) {
+                    window.location.href = 'admin/dashboard.php';
+                } else {
+                    errorMsg.innerText = response.message;
+                    errorMsg.style.display = 'block';
+                }
+            }
+        };
 
-  error.textContent = "";
-
-  if (!username || !password) {
-    error.textContent = "Vui lòng nhập đầy đủ thông tin.";
-    return;
-  }
-
-  const validUser = "Admin123@gmail.com";
-  const validPass = "Admin@2025";
-
-  if (username === validUser && password === validPass) {
-    window.location.href = "../admin/dashboard.php";
-  } else {
-    error.textContent = "Sai tài khoản hoặc mật khẩu.";
-  }
+        xhr.send('email=' + encodeURIComponent(email) + '&password=' + encodeURIComponent(password));
+    };
 });

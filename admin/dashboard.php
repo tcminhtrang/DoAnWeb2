@@ -1,24 +1,22 @@
 <?php
+date_default_timezone_set('Asia/Ho_Chi_Minh');
 require_once '../config/database.php';
-
-$sql_doanh_thu = "SELECT SUM(total_price) as tong_tien FROM orders WHERE DATE(order_date) = CURDATE() AND status IN ('delivered', 'shipped')";
+$today = date('Y-m-d');
+$sql_doanh_thu = "SELECT SUM(total_price) as tong_tien FROM orders WHERE DATE(order_date) = '$today' AND status IN ('delivered', 'shipped')";
 $res_doanh_thu = $conn->query($sql_doanh_thu);
 $doanh_thu = $res_doanh_thu->fetch_assoc()['tong_tien'] ?? 0;
-
 $sql_don_hang = "SELECT COUNT(*) as so_don FROM orders WHERE status = 'pending'";
 $res_don_hang = $conn->query($sql_don_hang);
 $don_moi = $res_don_hang->fetch_assoc()['so_don'] ?? 0;
-
 $sql_ton_kho = "SELECT COUNT(*) as sap_het FROM products WHERE stock < 10 AND status = 'active'";
 $res_ton_kho = $conn->query($sql_ton_kho);
 $sap_het = $res_ton_kho->fetch_assoc()['sap_het'] ?? 0;
-
 $sql_khach = "SELECT COUNT(*) as so_khach FROM users WHERE role = 'user'";
 $res_khach = $conn->query($sql_khach);
 $khach_hang = $res_khach->fetch_assoc()['so_khach'] ?? 0;
-
-$sql_recent_orders = "SELECT * FROM orders ORDER BY order_date DESC LIMIT 5";
+$sql_recent_orders = "SELECT * FROM orders ORDER BY id DESC LIMIT 5";
 $result_recent_orders = $conn->query($sql_recent_orders);
+
 $revenue_7_days = [];
 $max_revenue = 0;
 for ($i = 6; $i >= 0; $i--) {
@@ -75,7 +73,7 @@ if ($res_chart && $res_chart->num_rows > 0) {
      <img src="../assets/images/icons/profile.png" alt="User Icon">
     </button>
     <div class="user-dropdown">
-     <a href="../index.html">
+     <a href="../index.php">
       <span>Đăng xuất</span>
      </a>
     </div>
@@ -89,7 +87,7 @@ if ($res_chart && $res_chart->num_rows > 0) {
    </div>
    <div class="card">
     <h3>Đơn hàng mới</h3>
-    <p style="font-size: 20px;"><strong><?php echo $don_moi; ?></strong> (chờ xử lý)</p>
+    <p style="font-size: 20px;"><strong><?php echo $don_moi; ?></strong> (chưa xử lý)</p>
    </div>
    <div class="card">
     <h3>Sắp hết hàng</h3>
@@ -143,8 +141,9 @@ if ($res_chart && $res_chart->num_rows > 0) {
                   $status_class = '';
                   $status_text = '';
                   switch($row['status']) {
-                      case 'pending': $status_class = 'new'; $status_text = 'Mới đặt'; break;
-                      case 'processing': $status_class = 'processing'; $status_text = 'Đang xử lý'; break;
+                      // Đã đồng bộ chữ và class với order-management.php
+                      case 'pending': $status_class = 'pending'; $status_text = 'Chưa xử lý'; break; 
+                      case 'confirmed': $status_class = 'confirmed'; $status_text = 'Đã xác nhận'; break;
                       case 'shipped': $status_class = 'shipped'; $status_text = 'Đang giao'; break;
                       case 'delivered': $status_class = 'delivered'; $status_text = 'Đã giao'; break;
                       case 'cancelled': $status_class = 'cancelled'; $status_text = 'Đã hủy'; break;

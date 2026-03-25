@@ -1,12 +1,7 @@
 <?php
 require_once '../config/database.php';
-
-// 1. Xử lý bộ lọc thời gian (Mặc định là từ đầu tháng đến hiện tại)
 $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01');
 $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-t');
-
-// 2. Truy vấn Tổng quan (Tổng doanh thu & Tổng đơn hoàn tất)
-// Đã sửa lại thành total_price, order_date và status = 'delivered' theo đúng file SQL
 $sql_summary = "SELECT COUNT(id) as total_orders, SUM(total_price) as total_revenue 
                 FROM orders 
                 WHERE status = 'delivered' 
@@ -47,7 +42,7 @@ $res_top_products = $conn->query($sql_top_products);
   <?php include 'layout/sidebar.php'; ?>
   <main class="main-content">
     <header class="main-header">
-      <h1>Báo cáo & Thống kê</h1>
+      <h1>Báo cáo Doanh thu</h1>
     </header>
 
     <div class="table-toolbar" style="background: #fffaf5; padding: 15px; border: 1px dashed #ff6b35; border-radius: 8px;">
