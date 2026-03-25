@@ -21,6 +21,16 @@ $sql_top_products = "SELECT p.product_name, SUM(od.quantity) as total_sold, SUM(
                      ORDER BY total_sold DESC 
                      LIMIT 5";
 $res_top_products = $conn->query($sql_top_products);
+$sql_top_users = "SELECT u.fullname, u.phone, COUNT(o.id) as total_orders, SUM(o.total_price) as total_spent 
+                  FROM users u 
+                  JOIN orders o ON u.id = o.user_id 
+                  WHERE o.status = 'delivered' 
+                  AND u.role = 'user'
+                  AND DATE(o.order_date) BETWEEN '$start_date' AND '$end_date' 
+                  GROUP BY u.id 
+                  ORDER BY total_spent DESC 
+                  LIMIT 5";
+$res_top_users = $conn->query($sql_top_users);
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -40,6 +50,7 @@ $res_top_products = $conn->query($sql_top_products);
 </head>
 <body class="admin-body">
   <?php include 'layout/sidebar.php'; ?>
+  
   <main class="main-content">
     <header class="main-header">
       <h1>Báo cáo Doanh thu</h1>
@@ -95,6 +106,38 @@ $res_top_products = $conn->query($sql_top_products);
               }
           } else {
               echo "<tr><td colspan='4' class='text-center'>Chưa có dữ liệu bán hàng trong khoảng thời gian này!</td></tr>";
+          }
+          ?>
+        </tbody>
+      </table>
+    </section>
+    <h2 style="margin-top: 30px; margin-bottom: 15px; font-size: 18px; color: #333;">👑 Top 5 Khách Hàng Chi Tiêu Nhiều Nhất</h2>
+      <section class="table-section" style="margin-bottom: 30px;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 50px; text-align: center;">Top</th>
+            <th>Tên khách hàng</th>
+            <th class="text-center">Số điện thoại</th>
+            <th class="text-center">Số đơn đã mua</th>
+            <th class="text-center">Tổng chi tiêu</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php
+          if ($res_top_users && $res_top_users->num_rows > 0) {
+              $rank = 1;
+              while($row = $res_top_users->fetch_assoc()) {
+                  echo "<tr>";
+                    echo "<td style='text-align: center; font-weight: bold; color: #ff6b35;'>#" . $rank++ . "</td>";
+                    echo "<td><strong>" . $row['fullname'] . "</strong></td>";
+                    echo "<td class='text-center'>" . $row['phone'] . "</td>";
+                    echo "<td class='text-center'>" . $row['total_orders'] . "</td>";
+                    echo "<td class='text-center' style='color: #e74c3c; font-weight: bold;'>" . number_format($row['total_spent'], 0, ',', '.') . "đ</td>";
+                  echo "</tr>";
+              }
+          } else {
+              echo "<tr><td colspan='5' class='text-center'>Chưa có dữ liệu khách hàng trong khoảng thời gian này!</td></tr>";
           }
           ?>
         </tbody>
