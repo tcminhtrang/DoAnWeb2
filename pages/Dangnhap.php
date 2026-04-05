@@ -3,46 +3,32 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// 1. Kết nối database
 include '../config/database.php'; 
 
-$error = ""; // Biến lưu thông báo lỗi
+$error = ""; 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // 2. Lấy dữ liệu từ form và làm sạch
-    $email = mysqli_real_escape_string($conn, $_POST['email']);
+    $sql = "SELECT * FROM users WHERE email = '$email' AND role = 'user'";
     $password = $_POST['password'];
 
-    // 3. Truy vấn tìm người dùng theo email (Thêm điều kiện role = 'user' để Admin không đăng nhập nhầm cổng)
-    $sql = "SELECT * FROM users WHERE email = '$email' AND role = 'user'";
+    $sql = "SELECT * FROM users WHERE email = '$email'";
     $result = mysqli_query($conn, $sql);
     
     if (mysqli_num_rows($result) > 0) {
         $user = mysqli_fetch_assoc($result);
-        
-        // KIỂM TRA TÀI KHOẢN BỊ KHÓA
-        if ($user['status'] === 'locked') {
-            $error = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ CSKH!";
+        if (password_verify($password, $user['password'])) {
+            $_SESSION['user_id'] = $user['id']; 
+            $_SESSION['user_fullname'] = $user['fullname']; 
+            header("Location: Trangchu.php");
+            exit();
         } else {
-            // 4. LOGIC THÔNG MINH: Chấp nhận cả mật khẩu băm (cho user mới) VÀ mật khẩu thường (cho user mẫu)
-            if (password_verify($password, $user['password']) || $password === $user['password']) {
-                // Đăng nhập thành công! Lưu thông tin vào Session
-                $_SESSION['user_id'] = $user['id']; 
-                $_SESSION['user_fullname'] = $user['fullname']; 
-                
-                // Chuyển hướng về Trang chủ
-                header("Location: Trangchu.php");
-                exit();
-            } else {
-                $error = "Mật khẩu không chính xác!";
-            }
+            $error = "Mật khẩu không chính xác!";
         }
     } else {
-        $error = "Email này chưa được đăng ký hoặc không phải tài khoản khách hàng!";
+        $error = "Email này chưa được đăng ký!";
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -52,20 +38,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   <link rel="stylesheet" href="../css/Dangnhap.css" />
 </head>
 <body>
+  
   <div class="container">
-    <div class="login-box">
+    
+    <div class="login-box" style="position: relative;">
+      
+      <div style="position: absolute; top: 20px; left: 20px;">
+          <a href="javascript:window.history.back();" style="color: #f97407; text-decoration: none; font-size: 14px; font-weight: bold; transition: 0.3s;" onmouseover="this.style.color='#e66a06'" onmouseout="this.style.color='#f97407'">&larr; Quay lại</a>
+      </div>
+
       <div class="login-content">
+
         <div class="logo">
           <div class="logo-icon">
             <img src="../images/logo-1.png" alt="Logo Chicken Joy">
           </div>
           <h2>Chicken Joy</h2>
-          <p>Đăng nhập vào tài khoản của bạn</p>
         </div>
 
         <?php if($error != ""): ?>
             <div class="error-message" style="color: #d9534f; background: #f2dede; padding: 12px; border: 1px solid #ebccd1; border-radius: 4px; text-align: center; margin-bottom: 20px; font-size: 14px;">
-                <i class="fa-solid fa-circle-exclamation"></i> <?php echo $error; ?>
+                <?php echo $error; ?>
             </div>
         <?php endif; ?>
 
@@ -80,16 +73,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           <div class="input-box">
             <input type="password" id="password" name="password" placeholder="Nhập mật khẩu" required />
           </div>
-
-          <div class="options">
-            <label><input type="checkbox" name="remember" /> Ghi nhớ đăng nhập</label>
-            <a href="#" style="color: #e67e22; text-decoration: none; font-size: 13px;">Quên mật khẩu?</a>
-          </div>
-
+          <br><br>
           <button type="submit" class="btn">Đăng nhập</button>
-
-          <div class="divider"><span>Hoặc đăng nhập với</span></div>
-
 
           <p class="signup">Chưa có tài khoản? <a href="../pages/Dangky.php">Đăng ký ngay</a></p>
         </form>

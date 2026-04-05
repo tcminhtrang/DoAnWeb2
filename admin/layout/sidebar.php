@@ -47,8 +47,8 @@
       </a>
 
       <a href="../admin/report.php" class="<?php if($current_page == 'report.php') echo 'active'; ?>"> 
-        <img src="../assets/images/icons/report.png" alt="Báo cáo Doanh thu">
-        <span>Báo cáo Doanh thu</span>
+        <img src="../assets/images/icons/report.png" alt="Báo cáo & Thống kê">
+        <span>Báo cáo & Thống kê</span>
       </a>
 
       <div class="sidebar-footer">

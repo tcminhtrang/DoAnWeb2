@@ -6,9 +6,9 @@ $movement_result = null;
 $f_date = $t_date = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['btn_movement'])) {
-    $p_id = $_POST['product_id'];
-    $f_date = $_POST['from_date'];
-    $t_date = $_POST['to_date'];
+    $p_id = (int)$_POST['product_id']; 
+    $f_date = $conn->real_escape_string($_POST['from_date']);
+    $t_date = $conn->real_escape_string($_POST['to_date']);
 
     $sql = "SELECT 
             p.product_code, p.product_name, p.unit, c.category_name,
@@ -60,18 +60,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['btn_movement'])) {
                             <?php while($p = $all_products->fetch_assoc()): ?>
                             <option value="<?php echo $p['id']; ?>"
                                 <?php if(isset($_POST['product_id']) && $_POST['product_id'] == $p['id']) echo 'selected'; ?>>
-                                <?php echo $p['product_name']; ?>
+                                <?php echo htmlspecialchars($p['product_name']); ?>
                             </option>
                             <?php endwhile; ?>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="from-date">Từ ngày:</label>
-                        <input type="date" id="from-date" name="from_date" required value="<?php echo $f_date; ?>" />
+                        <input type="date" id="from-date" name="from_date" required value="<?php echo htmlspecialchars($f_date); ?>" />
                     </div>
                     <div class="form-group">
                         <label for="to-date">Đến ngày:</label>
-                        <input type="date" id="to-date" name="to_date" required value="<?php echo $t_date; ?>" />
+                        <input type="date" id="to-date" name="to_date" required value="<?php echo htmlspecialchars($t_date); ?>" />
                     </div>
                     <button type="submit" name="btn_movement" class="btn-primary">Tra cứu N-X-T</button>
                 </form>
@@ -84,12 +84,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['btn_movement'])) {
                         $closing_stock = $movement_result['opening_stock'] + $movement_result['period_import'] - $movement_result['period_export'];
                     ?>
                     <div class="result-row"><span class="label">Mã SP:</span> <span
-                            class="value"><?php echo $movement_result['product_code']; ?></span></div>
+                            class="value"><?php echo htmlspecialchars($movement_result['product_code']); ?></span></div>
                     <div class="result-row"><span class="label">Tên sản phẩm:</span> <span
-                            class="value"><?php echo $movement_result['product_name']; ?></span></div>
+                            class="value"><?php echo htmlspecialchars($movement_result['product_name']); ?></span></div>
                     <div class="result-row"><span class="label">Tồn đầu kỳ:</span> <span
                             class="value"><?php echo number_format($movement_result['opening_stock']); ?>
-                            <?php echo $movement_result['unit']; ?></span></div>
+                            <?php echo htmlspecialchars($movement_result['unit']); ?></span></div>
                     <div class="result-row"><span class="label">Nhập:</span> <span
                             class="value"><?php echo number_format($movement_result['period_import']); ?></span></div>
                     <div class="result-row"><span class="label">Xuất:</span> <span
@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['btn_movement'])) {
                             <?php 
             if ($closing_stock <= 0) {
                 echo '<span class="status cancelled">Hết hàng</span>';
-            } elseif ($closing_stock < 10) { // Giả sử 10 là mức cảnh báo
+            } elseif ($closing_stock < 10) {
                 echo '<span class="status cancelled">Sắp hết hàng</span>';
             } else {
                 echo '<span class="status active">Còn hàng</span>';

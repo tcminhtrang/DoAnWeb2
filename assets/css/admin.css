@@ -718,7 +718,32 @@ border: none;
 background-color: #b3deff;
 opacity: 1;
 }
+.btn-gray {
+    display: inline-block;
+    padding: 8px 15px;
+    border-radius: 4px;
+    text-decoration: none;
+    background: #6c757d; 
+    color: white;
+    border: none;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
 
+.btn-gray:hover { 
+    background: #5a6268; 
+}
+
+.combo-input {
+    width: 100%; 
+    padding: 8px; 
+    border-radius: 4px; 
+    border: 1px solid #ccc; 
+    font-family: inherit; 
+    font-size: 14px;
+}
 @keyframes buttonPop {
 0% { transform: scale(0.9); }
 50% { transform: scale(1.05); }
@@ -980,12 +1005,45 @@ transform: translateX(-3px);
 }
 
 .detail-card {
-background: #fffaf5;
-border-radius: 15px;
-padding: 25px 30px;
-box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-line-height: 1.8;
-margin: 0 20px; 
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.order-header-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #ffffff;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.order-header-info h2 { 
+    margin-bottom: 5px; 
+    color: #333; 
+}
+
+.order-summary {
+    text-align: right;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 2px dashed #ffffff;
+    font-size: 15px;
+}
+
+.order-summary .total-price {
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important; /* Phông chữ chuẩn Tiếng Việt */
+    font-size: 22px;
+    color: #e74c3c;
+    margin-top: 10px;
+    font-weight: 700; /* Ép độ đậm vừa phải để không bị vỡ nét */
+}
+
+.order-summary .total-price strong {
+    font-weight: 700;
 }
 .detail-card h2,
 .detail-card h3,

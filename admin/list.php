@@ -28,15 +28,15 @@ $result = $conn->query($sql);
   <main class="main-content">
     <header class="main-header">
       <h1>Quản lý danh mục sản phẩm</h1>
-      <a href="../admin/list-add.php" class="btn-primary">+ Thêm sản phẩm</a>
+      <a href="list-add.php" class="btn-primary">+ Thêm sản phẩm</a>
     </header>
 
     <div class="table-toolbar">
-      <form action="list.php" method="GET" style="display: flex; gap: 10px;">
-        <input type="text" name="search" value="<?php echo $search; ?>" placeholder="🔍 Tìm theo Tên hoặc Mã SP..." style="padding: 8px; width: 1100px; border: 1px solid #ccc; border-radius: 4px;">
+      <form action="list.php" method="GET" style="display: flex; gap: 10px; width: 100%;">
+        <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Tìm theo Tên hoặc Mã SP..." style="padding: 8px; flex: 1; border: 1px solid #ccc; border-radius: 4px; outline: none; font-family: inherit;">
         <button type="submit" class="btn-primary" style="padding: 8px 15px;">Tìm kiếm</button>
         <?php if($search != '') { ?>
-          <a href="list.php" class="btn-cancel" style="padding: 8px 15px; text-decoration: none; background: #6c757d; color: white; border-radius: 4px;">Hủy lọc</a>
+          <a href="list.php" class="btn-gray" style="padding: 8px 15px;">Hủy lọc</a>
         <?php } ?>
       </form>
     </div>
@@ -51,7 +51,7 @@ $result = $conn->query($sql);
             <th>Loại sản phẩm</th>
             <th>Mô tả</th>
             <th>Trạng thái</th>
-            <th>Thao tác</th>
+            <th style="text-align: center;">Thao tác</th>
           </tr>
         </thead>
         <tbody>
@@ -64,25 +64,25 @@ $result = $conn->query($sql);
                   echo "<tr>";
                     echo "<td>" . $row['product_code'] . "</td>";
                     echo "<td><img src='../assets/images/products/" . $row['image'] . "' alt='Thumb' class='thumb' style='width: 50px; height: 50px; object-fit: cover; border-radius: 4px;'></td>";
-                    echo "<td>" . $row['product_name'] . "</td>";
+                    echo "<td><strong>" . htmlspecialchars($row['product_name']) . "</strong></td>";
                     echo "<td>" . $row['category_name'] . "</td>"; 
-                    echo "<td style='max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;'>" . $row['description'] . "</td>";
+                    echo "<td style='max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;'>" . htmlspecialchars($row['description']) . "</td>";
                     echo "<td><span class='status " . $status_class . "'>" . $status_text . "</span></td>";
                     
                     echo "<td>
-                            <div class='actions'>
+                            <div class='actions' style='justify-content: center;'>
                               <a href='list-edit.php?id=" . $row['id'] . "' class='btn-edit'>Sửa</a>";
                     if ($row['status'] == 'active') {
-                        echo "<a href='list-delete.php?id=" . $row['id'] . "' class='btn-delete' onclick=\"return confirm('Bạn có muốn ẩn sản phẩm này không?');\">Ẩn</a>";
+                        echo "<a href='list-delete.php?id=" . $row['id'] . "' class='btn-gray' onclick=\"return confirm('Bạn có muốn ẩn sản phẩm này không?');\">Ẩn</a>";
                     } else {
-                        echo "<a href='list-restore.php?id=" . $row['id'] . "' class='btn-edit' style='background-color: #28a745; color: white;' onclick=\"return confirm('Khôi phục sản phẩm này?');\">Bật</a>";
+                        echo "<a href='list-restore.php?id=" . $row['id'] . "' class='btn-primary' style='background-color: #28a745;' onclick=\"return confirm('Khôi phục sản phẩm này?');\">Bật</a>";
                     }
                     echo "    </div>
                           </td>";
                   echo "</tr>";
               }
           } else {
-              echo "<tr><td colspan='7' style='text-align: center;'>Không tìm thấy sản phẩm!</td></tr>";
+              echo "<tr><td colspan='7' style='text-align: center; padding: 20px;'>Không tìm thấy sản phẩm!</td></tr>";
           }
           ?>
         </tbody>

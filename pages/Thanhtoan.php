@@ -363,6 +363,27 @@ $max_points_discount = $user_points * $point_to_money;
         const finalTotal = subtotal - promoDiscount - currentPointsDiscount;
         document.getElementById('final-total').innerText = (finalTotal > 0 ? finalTotal : 0).toLocaleString('vi-VN') + 'đ';
     }
+    // Lắng nghe sự kiện thay đổi phương thức thanh toán
+    document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const bankInfo = document.getElementById('bank-info');
+            const onlineNotice = document.getElementById('online-notice');
+
+            // Nếu chọn banking thì hiện bank-info, ngược lại thì ẩn
+            if (this.value === 'banking') {
+                bankInfo.style.display = 'block';
+            } else {
+                bankInfo.style.display = 'none';
+            }
+
+            // Tương tự cho thông báo thanh toán trực tuyến
+            if (this.value === 'online') {
+                onlineNotice.style.display = 'block';
+            } else {
+                onlineNotice.style.display = 'none';
+            }
+        });
+    });
     </script>
 </body>
 </html>

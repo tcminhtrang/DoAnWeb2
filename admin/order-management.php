@@ -1,26 +1,25 @@
 <?php
+session_start();
 require_once '../config/database.php';
-
+$success_msg = "";
+if (isset($_SESSION['success_msg'])) {
+    $success_msg = $_SESSION['success_msg'];
+    unset($_SESSION['success_msg']);
+}
 $where = "1=1";
-
-// lọc ngày
 if (!empty($_GET['fromDate'])) {
     $from = $_GET['fromDate'];
-    $where .= " AND o.order_date >= '$from'";
+    $where .= " AND o.order_date >= '$from 00:00:00'";
 }
 
 if (!empty($_GET['toDate'])) {
     $to = $_GET['toDate'];
-    $where .= " AND o.order_date <= '$to'";
+    $where .= " AND o.order_date <= '$to 23:59:59'";
 }
-
-// lọc trạng thái
 if (!empty($_GET['status']) && $_GET['status'] != 'all') {
     $status = $_GET['status'];
     $where .= " AND o.status = '$status'";
 }
-
-// query
 $sql = "SELECT o.*, u.fullname 
         FROM orders o
         JOIN users u ON o.user_id = u.id
@@ -52,29 +51,30 @@ $result = mysqli_query($conn, $sql);
             <h1>Quản Lý Đơn Đặt Hàng</h1>
         </header>
 
+        <?php if($success_msg != ""): ?>
+            <p style="color: #28a745; font-weight: bold; margin-bottom: 15px;">✓ <?= $success_msg ?></p>
+        <?php endif; ?>
+
         <div class="filters">
             <div class="filter-group">
                 <div class="filter">
                     <label>Từ ngày:</label>
-                    <input type="date" id="fromDate" />
+                    <input type="date" id="fromDate" value="<?= isset($_GET['fromDate']) ? htmlspecialchars($_GET['fromDate']) : '' ?>" />
                 </div>
                 <div class="filter">
                     <label>Đến ngày:</label>
-                    <input type="date" id="toDate" />
+                    <input type="date" id="toDate" value="<?= isset($_GET['toDate']) ? htmlspecialchars($_GET['toDate']) : '' ?>" />
                 </div>
                 <div class="filter">
                     <label>Tình trạng:</label>
                     <select id="statusFilter">
                         <?php
-                        // Lấy status hiện tại từ URL, nếu không có thì mặc định là 'all'
                         $currentStatus = isset($_GET['status']) ? $_GET['status'] : 'all';
                         ?>
                         <option value="all" <?= $currentStatus == 'all' ? 'selected' : '' ?>>Tất cả</option>
                         <option value="pending" <?= $currentStatus == 'pending' ? 'selected' : '' ?>>Chưa xử lý</option>
-                        <option value="confirmed" <?= $currentStatus == 'confirmed' ? 'selected' : '' ?>>Đã xác nhận
-                        </option>
-                        <option value="delivered" <?= $currentStatus == 'delivered' ? 'selected' : '' ?>>Đã giao
-                        </option>
+                        <option value="confirmed" <?= $currentStatus == 'confirmed' ? 'selected' : '' ?>>Đã xác nhận</option>
+                        <option value="delivered" <?= $currentStatus == 'delivered' ? 'selected' : '' ?>>Đã giao</option>
                         <option value="cancelled" <?= $currentStatus == 'cancelled' ? 'selected' : '' ?>>Đã hủy</option>
                     </select>
                 </div>
@@ -97,17 +97,21 @@ $result = mysqli_query($conn, $sql);
                     </tr>
                 </thead>
                 <tbody>
-                    <?php while ($row = mysqli_fetch_assoc($result)) { ?>
+                    <?php 
+                    if (mysqli_num_rows($result) > 0) {
+                        while ($row = mysqli_fetch_assoc($result)) { 
+                    ?>
                         <tr>
                             <td>DH<?= str_pad($row['id'], 3, '0', STR_PAD_LEFT) ?></td>
-                            <td><?= $row['fullname'] ?></td>
-                            <td><?= date('Y-m-d', strtotime($row['order_date'])) ?></td>
-                            <td><?= number_format($row['total_price']) ?>đ</td>
+                            <td><?= htmlspecialchars($row['fullname']) ?></td>
+                            <td><?= date('Y-m-d H:i', strtotime($row['order_date'])) ?></td>
+                            <td style="font-weight: bold; color: #e74c3c;"><?= number_format($row['total_price']) ?>đ</td>
 
                             <td>
                                 <?php
                                 $statusText = "";
                                 $class = "";
+                                $icon = "";
 
                                 switch ($row['status']) {
                                     case 'pending':
@@ -176,7 +180,12 @@ $result = mysqli_query($conn, $sql);
                             </td>
 
                         </tr>
-                    <?php } ?>
+                    <?php 
+                        } 
+                    } else {
+                        echo "<tr><td colspan='6' style='text-align: center; padding: 20px;'>Không có đơn hàng nào!</td></tr>";
+                    }
+                    ?>
                 </tbody>
             </table>
 

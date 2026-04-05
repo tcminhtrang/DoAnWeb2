@@ -27,7 +27,8 @@ CREATE TABLE `users` (
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `email` (`email`)
+  UNIQUE KEY `email` (`email`),
+  UNIQUE KEY `phone` (`phone`) -- Thêm unique số điện thoại để chặn trùng
 ) ENGINE=InnoDB;
 
 CREATE TABLE `import_receipts` (
@@ -44,7 +45,7 @@ CREATE TABLE `products` (
   `product_code` varchar(20) UNIQUE DEFAULT NULL,  
   `category_id` int(11) DEFAULT 1,                 
   `product_name` varchar(255) NOT NULL,            
-  `category` varchar(100) NOT NULL,                
+  -- ĐÃ XÓA CỘT CATEGORY DƯ THỪA ĐỂ CHUẨN HÓA DỮ LIỆU
   `description` text DEFAULT NULL,                 
   `unit` varchar(50) NOT NULL DEFAULT 'Phần',      
   `import_price` decimal(15, 2) DEFAULT 0.00,      
@@ -75,6 +76,17 @@ CREATE TABLE `import_receipt_details` (
   FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
+CREATE TABLE `promotions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `code` varchar(50) NOT NULL UNIQUE, -- THÊM UNIQUE KHÓA NGOẠI
+  `name` varchar(255) NOT NULL,
+  `discount_percent` int(11) NOT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `status` varchar(20) DEFAULT 'active',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB;
+
 CREATE TABLE `orders` (
   `id` INT PRIMARY KEY AUTO_INCREMENT,
   `user_id` INT NOT NULL,
@@ -89,7 +101,8 @@ CREATE TABLE `orders` (
   `ward` VARCHAR(255) DEFAULT NULL,
   `phone` VARCHAR(20) NOT NULL,           
   `order_note` TEXT,                      
-  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`),
+  FOREIGN KEY (`promo_code`) REFERENCES `promotions`(`code`) ON UPDATE CASCADE ON DELETE SET NULL -- THÊM KHÓA NGOẠI
 ) ENGINE=InnoDB;
 
 CREATE TABLE `order_details` (
@@ -98,7 +111,7 @@ CREATE TABLE `order_details` (
   `product_id` INT NOT NULL,
   `quantity` INT NOT NULL,
   `price_at_purchase` DECIMAL(15, 2) NOT NULL,
-  FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`),
+  FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`) ON DELETE CASCADE, -- THÊM XÓA DÂY CHUYỀN
   FOREIGN KEY (`product_id`) REFERENCES `products`(`id`)
 ) ENGINE=InnoDB;
 
@@ -108,20 +121,9 @@ CREATE TABLE `cart` (
     `product_id` INT NOT NULL,
     `quantity` INT NOT NULL DEFAULT 1,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`),
-    FOREIGN KEY (`product_id`) REFERENCES `products`(`id`)
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB;
-
-CREATE TABLE `promotions` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `code` varchar(50) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `discount_percent` int(11) NOT NULL,
-  `start_date` date NOT NULL,
-  `end_date` date NOT NULL,
-  `status` varchar(20) DEFAULT 'active',
-  PRIMARY KEY (`id`)
-);
 
 CREATE TABLE `points` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -130,7 +132,11 @@ CREATE TABLE `points` (
   `config_value` int(11) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `config_key` (`config_key`)
-);
+) ENGINE=InnoDB;
+
+-- ==========================================
+-- THÊM DỮ LIỆU MẪU CỦA TRANG
+-- ==========================================
 
 INSERT INTO `categories` (`id`,`category_code`, `category_name`, `status`) VALUES
 (1,'L01', 'Gà Rán', 'active'), (2,'L02', 'Burger', 'active'), (3,'L03', 'Combo ăn trưa', 'hidden'),
@@ -159,40 +165,41 @@ INSERT INTO `promotions` (`code`, `name`, `discount_percent`, `start_date`, `end
 ('FREESHIP', 'Tuần lễ Miễn phí giao hàng', 15, '2025-08-01', '2025-08-15', 'locked');
 
 INSERT INTO `import_receipts` (`id`, `receipt_code`, `import_date`, `total_amount`, `status`) VALUES
-(1, 'PN001', '2025-10-15', 4150000.00, 'completed'), (2, 'PN002', '2025-10-25', 3200000.00, 'completed'),
-(3, 'PN003', '2025-11-01', 5000000.00, 'completed'), (4, 'PN004', '2025-11-02', 1505000.00, 'completed'),
-(5, 'PN005', '2025-11-10', 4600000.00, 'completed'), (6, 'PN006', '2025-11-15', 3300000.00, 'completed'),
-(7, 'PN007', '2025-11-20', 4000000.00, 'completed'), (8, 'PN008', '2025-11-25', 3200000.00, 'completed'),
-(9, 'PN009', '2025-12-01', 3800000.00, 'completed'), (10, 'PN010', '2025-12-05', 3000000.00, 'completed'),
-(11, 'PN011', '2025-12-10', 6500000.00, 'completed'), (12, 'PN012', '2025-12-15', 3100000.00, 'completed'),
-(13, 'PN013', '2025-12-20', 3500000.00, 'completed'), (14, 'PN014', '2025-12-25', 2500000.00, 'completed'),
-(15, 'PN015', '2026-01-05', 4800000.00, 'completed'), (16, 'PN016', '2026-01-15', 2700000.00, 'completed'), 
-(17, 'PN017', '2026-02-02', 5400000.00, 'completed'), (18, 'PN018', '2026-02-20', 7500000.00, 'completed'), 
-(19, 'PN019', '2026-03-01', 5600000.00, 'completed'), (20, 'PN020', '2026-03-10', 3500000.00, 'pending');
+(1, 'PN001', '2025-10-15', 4150000, 'completed'), (2, 'PN002', '2025-10-25', 3200000, 'completed'),
+(3, 'PN003', '2025-11-01', 5000000, 'completed'), (4, 'PN004', '2025-11-02', 1505000, 'completed'),
+(5, 'PN005', '2025-11-10', 4600000, 'completed'), (6, 'PN006', '2025-11-15', 3300000, 'completed'),
+(7, 'PN007', '2025-11-20', 4000000, 'completed'), (8, 'PN008', '2025-11-25', 3200000, 'completed'),
+(9, 'PN009', '2025-12-01', 3800000, 'completed'), (10, 'PN010', '2025-12-05', 3000000, 'completed'),
+(11, 'PN011', '2025-12-10', 6500000, 'completed'), (12, 'PN012', '2025-12-15', 3100000, 'completed'),
+(13, 'PN013', '2025-12-20', 3500000, 'completed'), (14, 'PN014', '2025-12-25', 2500000, 'completed'),
+(15, 'PN015', '2026-01-05', 4800000, 'completed'), (16, 'PN016', '2026-01-15', 2700000, 'completed'), 
+(17, 'PN017', '2026-02-02', 5400000, 'completed'), (18, 'PN018', '2026-02-20', 7500000, 'completed'), 
+(19, 'PN019', '2026-03-01', 5600000, 'completed'), (20, 'PN020', '2026-03-10', 3500000, 'pending');
 
-INSERT INTO `products` (`id`, `product_code`, `category_id`, `product_name`, `category`, `description`, `unit`, `import_price`, `profit_rate`, `price`, `stock`, `calories`, `protein`, `carbs`, `fat`, `image`, `is_new`, `status`) VALUES
-(1, 'SP001', 1, 'Gà rán giòn tan', 'GaRan', 'Gà được tẩm ướp vị đặc biệt, chiên giòn vàng ươm', 'Miếng', 50000, 0.78, 89000, 50, 320, 25, 12, 18, 'ga-ran-4.jpg', 1, 'active'),
-(2, 'SP002', 1, 'Gà rán Hàn Quốc', 'GaRan', 'Gà rán theo cách Hàn Quốc với sốt đặc trưng', 'Phần', 70000, 0.70, 119000, 30, 350, 23, 15, 20, 'ga-ran-2.jpg', 1, 'active'),
-(3, 'SP003', 1, 'Đùi gà giòn', 'GaRan', 'Đùi gà giòn tan, thịt bên trong mọng nước', 'Miếng', 50000, 0.78, 89000, 40, 280, 20, 10, 15, 'ga-ran-3.jpg', 0, 'active'),
-(4, 'SP004', 1, 'Combo gia đình', 'GaRan', '8 miếng gà rán đủ loại cho cả gia đình', 'Phần', 200000, 0.49, 299000, 2, 1200, 80, 45, 60, 'ga-ran-1.jpg', 0, 'active'),
-(5, 'SP005', 1, 'Cánh gà rán giòn', 'GaRan', 'Cánh gà siêu to khổng lồ giòn rụm', 'Miếng', 25000, 0.80, 45000, 60, 210, 15, 8, 12, 'canhga.png', 0, 'active'),
-(6, 'SP007', 2, 'Hamburger Gà Giòn', 'Hamburger', 'Nhân gà chiên xù xốt Mayonnaise', 'Cái', 30000, 0.83, 55000, 25, 420, 20, 38, 18, 'hamburgerga.png', 0, 'active'),
-(7, 'SP008', 2, 'Double Burger', 'Hamburger', 'Hai lớp nhân thịt bò cực đã cho người cực đói', 'Cái', 50000, 0.90, 95000, 0, 680, 40, 42, 35, 'hamburgerthit.png', 1, 'active'),
-(8, 'SP009', 4, 'Mì Ý sốt bò bằm', 'MiY', 'Mì Ý truyền thống đậm vị Ý, mê ly', 'Phần', 40000, 0.72, 69000, 20, 550, 18, 70, 12, 'miybobam.png', 0, 'active'),
-(9, 'SP011', 4, 'Mì Ý sốt kem', 'MiY', 'Vị béo ngậy của kem tươi và nấm', 'Phần', 45000, 0.66, 75000, 3, 620, 15, 60, 30, 'mi-y-2.png', 0, 'active'),
-(10, 'SP012', 6, 'Khoai tây chiên', 'KhoaiTay', 'Giòn lâu, vui lâu - món ăn kèm tuyệt vời', 'Phần', 20000, 1.00, 40000, 100, 312, 3, 41, 15, 'khoai-tay-2.jpg', 0, 'active'),
-(11, 'SP013', 6, 'Khoai tây lắc phô mai', 'KhoaiTay', 'Khoai tây vàng giòn lắc bột phô mai đặc biệt', 'Phần', 25000, 0.80, 45000, 80, 350, 4, 43, 17, 'khoai-tay-1.jpg', 0, 'active'),
-(12, 'SP015', 7, 'Coca Cola mát lạnh', 'NuocUong', 'Nước giải khát có gas cực đã', 'Ly', 8000, 0.87, 15000, 200, 140, 0, 39, 0, 'coca.png', 0, 'active'),
-(13, 'SP016', 7, 'Trà đào miếng', 'NuocUong', 'Trà thanh mát kèm miếng đào thơm giòn', 'Ly', 15000, 1.00, 30000, 45, 130, 0, 32, 0, 'Tradao.png', 0, 'active'),
-(14, 'SP018', 2, 'Hamburger Tôm', 'Hamburger', 'Nhân tôm tươi giòn rụm, xốt đặc biệt', 'Cái', 40000, 0.62, 65000, 4, 380, 18, 40, 15, 'burgertom.png', 1, 'active'),
-(15, 'SP019', 4, 'Mì Ý xốt xúc xích', 'MiY', 'Dành cho các bạn nhỏ với xúc xích đức', 'Phần', 25000, 0.80, 45000, 22, 400, 12, 55, 10, 'miyxucxich.png', 0, 'active'),
-(16, 'SP020', 6, 'Khoai tây múi cau', 'KhoaiTay', 'Khoai tây cắt múi cau lạ mắt, giòn tan', 'Phần', 20000, 0.75, 35000, 50, 310, 3, 40, 14, 'khoaitaymuicau.png', 0, 'active'),
-(17, 'SP006', 2, 'Hamburger Bò Phô Mai', 'Hamburger', 'Nhân thịt bò Úc nướng và phô Mai tan chảy', 'Cái', 45000, 0.75, 79000, 20, 450, 22, 35, 25, 'hamburger-2.jpg', 0, 'active'),
-(18, 'SP010', 4, 'Mì Ý hải sản', 'MiY', 'Xốt cà chua và hải sản tươi ngon', 'Phần', 60000, 0.65, 99000, 0, 500, 20, 65, 10, 'mi-y-1.jpg', 1, 'active'),
-(19, 'SP014', 7, 'Nước nha đam', 'NuocUong', 'Nước nha đam lạnh sảng khoái, ít đường', 'Ly', 20000, 0.75, 35000, 40, 120, 0, 30, 0, 'nuoc-.uong.jpg', 0, 'active'),
-(20, 'SP017', 1, 'Gà rán cay nồng', 'GaRan', 'Vị cay cực hạn cho tín đồ ăn cay', 'Miếng', 25000, 0.68, 42000, 0, 330, 24, 13, 19, 'ga-ran-cay.jpg', 0, 'active'),
-(21, 'SP021', 7, 'Pepsi', 'NuocUong', 'Nước giải khát phổ biến toàn thế giới', 'Ly', 8000, 0.87, 15000, 150, 140, 0, 39, 0, 'pepsi.png', 0, 'active'),
-(22, 'SP022', 7, 'Trà sữa Chicken Joy', 'NuocUong', 'Trà sữa trân châu đậm vị, béo ngậy', 'Ly', 20000, 0.75, 35000, 30, 250, 2, 45, 8, 'trasua.png', 1, 'active');
+-- ĐÃ XÓA GIÁ TRỊ STRING THỪA CỦA CỘT CATEGORY
+INSERT INTO `products` (`id`, `product_code`, `category_id`, `product_name`, `description`, `unit`, `import_price`, `profit_rate`, `price`, `stock`, `calories`, `protein`, `carbs`, `fat`, `image`, `is_new`, `status`) VALUES
+(1, 'SP001', 1, 'Gà rán giòn tan', 'Gà được tẩm ướp vị đặc biệt, chiên giòn vàng ươm', 'Miếng', 50000, 0.78, 89000, 50, 320, 25, 12, 18, 'ga-ran-4.jpg', 1, 'active'),
+(2, 'SP002', 1, 'Gà rán Hàn Quốc', 'Gà rán theo cách Hàn Quốc với sốt đặc trưng', 'Phần', 70000, 0.70, 119000, 30, 350, 23, 15, 20, 'ga-ran-2.jpg', 1, 'active'),
+(3, 'SP003', 1, 'Đùi gà giòn', 'Đùi gà giòn tan, thịt bên trong mọng nước', 'Miếng', 50000, 0.78, 89000, 40, 280, 20, 10, 15, 'ga-ran-3.jpg', 0, 'active'),
+(4, 'SP004', 1, 'Combo gia đình', '8 miếng gà rán đủ loại cho cả gia đình', 'Phần', 200000, 0.49, 299000, 2, 1200, 80, 45, 60, 'ga-ran-1.jpg', 0, 'active'),
+(5, 'SP005', 1, 'Cánh gà rán giòn', 'Cánh gà siêu to khổng lồ giòn rụm', 'Miếng', 25000, 0.80, 45000, 60, 210, 15, 8, 12, 'canhga.png', 0, 'active'),
+(6, 'SP007', 2, 'Hamburger Gà Giòn', 'Nhân gà chiên xù xốt Mayonnaise', 'Cái', 30000, 0.83, 55000, 25, 420, 20, 38, 18, 'hamburgerga.png', 0, 'active'),
+(7, 'SP008', 2, 'Double Burger', 'Hai lớp nhân thịt bò cực đã cho người cực đói', 'Cái', 50000, 0.90, 95000, 0, 680, 40, 42, 35, 'hamburgerthit.png', 1, 'active'),
+(8, 'SP009', 4, 'Mì Ý sốt bò bằm', 'Mì Ý truyền thống đậm vị Ý, mê ly', 'Phần', 40000, 0.72, 69000, 20, 550, 18, 70, 12, 'miybobam.png', 0, 'active'),
+(9, 'SP011', 4, 'Mì Ý sốt kem', 'Vị béo ngậy của kem tươi và nấm', 'Phần', 45000, 0.66, 75000, 3, 620, 15, 60, 30, 'mi-y-2.png', 0, 'active'),
+(10, 'SP012', 6, 'Khoai tây chiên', 'Giòn lâu, vui lâu - món ăn kèm tuyệt vời', 'Phần', 20000, 1.00, 40000, 100, 312, 3, 41, 15, 'khoai-tay-2.jpg', 0, 'active'),
+(11, 'SP013', 6, 'Khoai tây lắc phô mai', 'Khoai tây vàng giòn lắc bột phô mai đặc biệt', 'Phần', 25000, 0.80, 45000, 80, 350, 4, 43, 17, 'khoai-tay-1.jpg', 0, 'active'),
+(12, 'SP015', 7, 'Coca Cola mát lạnh', 'Nước giải khát có gas cực đã', 'Ly', 8000, 0.87, 15000, 200, 140, 0, 39, 0, 'coca.png', 0, 'active'),
+(13, 'SP016', 7, 'Trà đào miếng', 'Trà thanh mát kèm miếng đào thơm giòn', 'Ly', 15000, 1.00, 30000, 45, 130, 0, 32, 0, 'Tradao.png', 0, 'active'),
+(14, 'SP018', 2, 'Hamburger Tôm', 'Nhân tôm tươi giòn rụm, xốt đặc biệt', 'Cái', 40000, 0.62, 65000, 4, 380, 18, 40, 15, 'burgertom.png', 1, 'active'),
+(15, 'SP019', 4, 'Mì Ý xốt xúc xích', 'Dành cho các bạn nhỏ với xúc xích đức', 'Phần', 25000, 0.80, 45000, 22, 400, 12, 55, 10, 'miyxucxich.png', 0, 'active'),
+(16, 'SP020', 6, 'Khoai tây múi cau', 'Khoai tây cắt múi cau lạ mắt, giòn tan', 'Phần', 20000, 0.75, 35000, 50, 310, 3, 40, 14, 'khoaitaymuicau.png', 0, 'active'),
+(17, 'SP006', 2, 'Hamburger Bò Phô Mai', 'Nhân thịt bò Úc nướng và phô Mai tan chảy', 'Cái', 45000, 0.75, 79000, 20, 450, 22, 35, 25, 'hamburger-2.jpg', 0, 'active'),
+(18, 'SP010', 4, 'Mì Ý hải sản', 'Xốt cà chua và hải sản tươi ngon', 'Phần', 60000, 0.65, 99000, 0, 500, 20, 65, 10, 'mi-y-1.jpg', 1, 'active'),
+(19, 'SP014', 7, 'Nước nha đam', 'Nước nha đam lạnh sảng khoái, ít đường', 'Ly', 20000, 0.75, 35000, 40, 120, 0, 30, 0, 'nuoc-.uong.jpg', 0, 'active'),
+(20, 'SP017', 1, 'Gà rán cay nồng', 'Vị cay cực hạn cho tín đồ ăn cay', 'Miếng', 25000, 0.68, 42000, 0, 330, 24, 13, 19, 'ga-ran-cay.jpg', 0, 'active'),
+(21, 'SP021', 7, 'Pepsi', 'Nước giải khát phổ biến toàn thế giới', 'Ly', 8000, 0.87, 15000, 150, 140, 0, 39, 0, 'pepsi.png', 0, 'active'),
+(22, 'SP022', 7, 'Trà sữa Chicken Joy', 'Trà sữa trân châu đậm vị, béo ngậy', 'Ly', 20000, 0.75, 35000, 30, 250, 2, 45, 8, 'trasua.png', 1, 'active');
 
 INSERT INTO `import_receipt_details` (`receipt_id`, `product_id`, `quantity`, `import_price`) VALUES
 (1, 1, 50, 50000.00), (1, 6, 20, 45000.00), (1, 12, 30, 20000.00), (1, 16, 10, 15000.00),
@@ -217,9 +224,9 @@ INSERT INTO `import_receipt_details` (`receipt_id`, `product_id`, `quantity`, `i
 (20, 5, 100, 25000.00), (20, 20, 50, 20000.00);
 
 INSERT INTO `users` (`fullname`, `email`, `password`, `phone`, `gender`, `address`, `role`, `points`, `status`) VALUES
-('Quản Trị Viên 1', 'admin@jollibee.vn', '$2y$10$O5//LcLZtNCkVhygy9ccpO9pN4asmyGZOlXs4l.FBqdxaL5dLYs3e', '0999999991', 'nam', 'Trụ sở chính', 'admin', 0, 'active'),
-('Quản Trị Viên 2', 'manager@chickenjoy.vn', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '0999999992', 'nu', 'Chi nhánh 2', 'admin', 0, 'active'),
-('Kế Toán Trưởng', 'ketoan@chickenjoy.vn', '$2y$10$TKh8H1.PfQx37YgCzwiKb.KjNyWgaHb9cbcoQgdIVFlYg7B77UdFm', '0999999993', 'nu', 'Chi nhánh 3', 'admin', 0, 'active'),
+('admin', 'admin@jollibee.vn', '$2y$10$O5//LcLZtNCkVhygy9ccpO9pN4asmyGZOlXs4l.FBqdxaL5dLYs3e', '0999999991', 'nam', 'Trụ sở chính', 'admin', 0, 'active'),
+('manager A', 'manager1@chickenjoy.vn', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '0999999992', 'nu', 'Chi nhánh 2', 'admin', 0, 'active'),
+('manager B', 'manager2@chickenjoy.vn', '$2y$10$TKh8H1.PfQx37YgCzwiKb.KjNyWgaHb9cbcoQgdIVFlYg7B77UdFm', '0999999993', 'nu', 'Chi nhánh 3', 'admin', 0, 'active'),
 ('Nguyễn Văn An', 'vana@gmail.com', 'annguyen99', '0903456789', 'nam', '123 Đường ABC, Hà Nội', 'user', 20, 'active'),
 ('Trần Thị Bình', 'thib@gmail.com', 'binhtt_02', '0778123456', 'nu', '456 Đường DEF, HCM', 'user', 43, 'locked'),
 ('Lê Minh Cường', 'minhc@gmail.com', 'cuonglm_2001', '0369987654', 'nam', '789 Đường GHI, Đà Nẵng', 'user', 71, 'active'),

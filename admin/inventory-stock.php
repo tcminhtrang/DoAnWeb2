@@ -1,10 +1,6 @@
 <?php
 require_once '../config/database.php';
-
-// Lấy danh sách loại sản phẩm
 $categories = $conn->query("SELECT * FROM categories WHERE status = 'active'");
-
-// Lấy danh sách tất cả sản phẩm (để JavaScript lọc)
 $all_products_res = $conn->query("SELECT id, product_name, category_id FROM products WHERE status = 'active'");
 $products_list = [];
 while($row = $all_products_res->fetch_assoc()) {
@@ -13,14 +9,12 @@ while($row = $all_products_res->fetch_assoc()) {
 
 $result_data = null;
 $target_date = '';
-$selected_cat = ''; // Biến giữ loại sản phẩm đã chọn
+$selected_cat = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['btn_search'])) {
-    $p_id = $_POST['product_id'];
-    $target_date = $_POST['date'];
-    $selected_cat = $_POST['category_id']; // Lấy ID loại từ form
-
-    // Truy vấn tính toán tồn kho (giữ nguyên logic của bạn)
+    $p_id = (int)$_POST['product_id'];
+    $target_date = $conn->real_escape_string($_POST['date']);
+    $selected_cat = (int)$_POST['category_id'];
     $sql = "SELECT 
             p.product_code, p.product_name, p.unit, c.category_name, p.stock as current_stock,
             (SELECT SUM(id.quantity) FROM import_receipt_details id JOIN import_receipts ir ON id.receipt_id = ir.id 
@@ -75,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['btn_search'])) {
                             ?>
                             <option value="<?php echo $cat['id']; ?>"
                                 <?php if($selected_cat == $cat['id']) echo 'selected'; ?>>
-                                <?php echo $cat['category_name']; ?>
+                                <?php echo htmlspecialchars($cat['category_name']); ?>
                             </option>
                             <?php endwhile; ?>
                         </select>
@@ -88,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['btn_search'])) {
                             <?php foreach($products_list as $p): ?>
                             <option value="<?php echo $p['id']; ?>" data-category="<?php echo $p['category_id']; ?>"
                                 <?php if(isset($_POST['product_id']) && $_POST['product_id'] == $p['id']) echo 'selected'; ?>>
-                                <?php echo $p['product_name']; ?>
+                                <?php echo htmlspecialchars($p['product_name']); ?>
                             </option>
                             <?php endforeach; ?>
                         </select>
@@ -97,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['btn_search'])) {
                     <div class="form-group">
                         <label for="date">Tại thời điểm:</label>
                         <input type="date" id="date" name="date" required
-                            value="<?php echo $target_date ? $target_date : date('Y-m-d'); ?>" />
+                            value="<?php echo $target_date ? htmlspecialchars($target_date) : date('Y-m-d'); ?>" />
                     </div>
 
                     <button type="submit" name="btn_search" class="btn-primary">Tra cứu tồn kho</button>
@@ -111,20 +105,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['btn_search'])) {
                         $calc_stock = ($result_data['total_in'] ?? 0) - ($result_data['total_out'] ?? 0);
                     ?>
                     <div class="result-row"><span class="label">Mã SP:</span> <span
-                            class="value"><?php echo $result_data['product_code']; ?></span></div>
+                            class="value"><?php echo htmlspecialchars($result_data['product_code']); ?></span></div>
                     <div class="result-row"><span class="label">Tên sản phẩm:</span> <span
-                            class="value"><?php echo $result_data['product_name']; ?></span></div>
+                            class="value"><?php echo htmlspecialchars($result_data['product_name']); ?></span></div>
                     <div class="result-row"><span class="label">Loại sản phẩm:</span> <span
-                            class="value"><?php echo $result_data['category_name']; ?></span></div>
+                            class="value"><?php echo htmlspecialchars($result_data['category_name']); ?></span></div>
                     <div class="result-row"><span class="label">Tồn kho tại ngày
                             <?php echo date('d/m/Y', strtotime($target_date)); ?>:</span>
                         <span class="value"><?php echo number_format($calc_stock); ?>
-                            <?php echo $result_data['unit']; ?></span>
+                            <?php echo htmlspecialchars($result_data['unit']); ?></span>
                     </div>
                     <div class="result-row">
                         <span class="label">Trạng thái:</span>
                         <?php 
-        // Giả sử ngưỡng cảnh báo là 10, bạn có thể lấy từ DB nếu muốn
         $threshold = 10; 
         
         if ($calc_stock <= 0) {
@@ -150,8 +143,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['btn_search'])) {
         var categoryId = document.getElementById('product-type').value;
         var productSelect = document.getElementById('product-name');
         var options = productSelect.options;
-
-        // Reset về mặc định nếu đổi loại
         productSelect.value = "";
 
         for (var i = 0; i < options.length; i++) {
@@ -165,14 +156,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['btn_search'])) {
             }
         }
     }
-
-    // Chạy lọc ngay khi load trang để đảm bảo nếu có chọn loại từ trước thì danh sách tên SP khớp luôn
     window.onload = function() {
         if (document.getElementById('product-type').value !== "") {
             filterProducts();
-            // Giữ lại tên sản phẩm đã chọn sau khi reload
             document.getElementById('product-name').value =
-                "<?php echo isset($_POST['product_id']) ? $_POST['product_id'] : ''; ?>";
+                "<?php echo isset($_POST['product_id']) ? htmlspecialchars($_POST['product_id']) : ''; ?>";
         }
     };
     </script>

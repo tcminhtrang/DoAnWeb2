@@ -1,26 +1,17 @@
 <?php
 require_once '../config/database.php';
-
-// 1. Lấy từ khóa tìm kiếm và ngưỡng cảnh báo từ GET
 $search = isset($_GET['search']) ? $conn->real_escape_string($_GET['search']) : '';
 $low_stock_threshold = isset($_GET['threshold']) ? intval($_GET['threshold']) : 10;
-
-// 2. Lấy danh sách sản phẩm sắp hết hàng (vẫn giữ nguyên lọc theo threshold)
 $sql_low_stock = "SELECT product_name, stock, unit FROM products WHERE stock < $low_stock_threshold AND status = 'active'";
 $low_stock_result = $conn->query($sql_low_stock);
-
-// 3. Lấy danh sách hiển thị bảng (Có thêm điều kiện WHERE để tìm kiếm)
 $sql_main = "SELECT p.product_code, p.product_name, c.category_name, p.stock, p.unit,
             (SELECT SUM(quantity) FROM import_receipt_details id JOIN import_receipts ir ON id.receipt_id = ir.id WHERE id.product_id = p.id AND ir.status = 'completed') as total_import,
             (SELECT SUM(quantity) FROM order_details od JOIN orders o ON od.order_id = o.id WHERE od.product_id = p.id AND o.status = 'delivered') as total_export
             FROM products p
             JOIN categories c ON p.category_id = c.id";
-
-// Nếu có từ khóa tìm kiếm, thêm điều kiện lọc vào SQL
 if (!empty($search)) {
     $sql_main .= " WHERE p.product_name LIKE '%$search%' OR p.product_code LIKE '%$search%'";
 }
-
 $main_result = $conn->query($sql_main);
 ?>
 
@@ -53,7 +44,7 @@ $main_result = $conn->query($sql_main);
                     </form>
                     <ul>
                         <?php while($row = $low_stock_result->fetch_assoc()): ?>
-                        <li><?php echo $row['product_name']; ?>: còn <?php echo $row['stock'] . " " . $row['unit']; ?>
+                        <li><?php echo htmlspecialchars($row['product_name']); ?>: còn <?php echo $row['stock'] . " " . htmlspecialchars($row['unit']); ?>
                         </li>
                         <?php endwhile; ?>
                     </ul>
@@ -63,7 +54,7 @@ $main_result = $conn->query($sql_main);
             <form method="GET" style="display: flex; gap: 12px; width: 100%; align-items: center;">
                 <input type="hidden" name="threshold" value="<?php echo $low_stock_threshold; ?>">
 
-                <input type="text" name="search" placeholder="🔍 Tìm tên hoặc mã sản phẩm..."
+                <input type="text" name="search" placeholder="Tìm tên hoặc mã sản phẩm..."
                     value="<?php echo htmlspecialchars($search); ?>" style="flex: 1; max-width: 400px;">
 
                 <button type="submit" class="btn-primary" style="background: #28a745;">Tìm kiếm</button>
@@ -90,9 +81,9 @@ $main_result = $conn->query($sql_main);
                     <?php if ($main_result->num_rows > 0): ?>
                     <?php while($row = $main_result->fetch_assoc()): ?>
                     <tr>
-                        <td><?php echo $row['product_code']; ?></td>
-                        <td><?php echo $row['product_name']; ?></td>
-                        <td><?php echo $row['category_name']; ?></td>
+                        <td><?php echo htmlspecialchars($row['product_code']); ?></td>
+                        <td><?php echo htmlspecialchars($row['product_name']); ?></td>
+                        <td><?php echo htmlspecialchars($row['category_name']); ?></td>
                         <td><?php echo $row['total_import'] ?? 0; ?></td>
                         <td><?php echo $row['total_export'] ?? 0; ?></td>
                         <td><?php echo $row['stock']; ?></td>

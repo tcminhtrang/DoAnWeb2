@@ -24,15 +24,15 @@ $result = $conn->query($sql);
   <main class="main-content">
     <header class="main-header">
       <h1>Quản lý loại sản phẩm</h1>
-      <a href="../admin/category-add.php" class="btn-primary">+ Thêm loại</a>
+      <a href="category-add.php" class="btn-primary">+ Thêm loại</a>
     </header>
 
     <div class="table-toolbar">
-      <form action="category.php" method="GET" style="display: flex; gap: 10px;">
-        <input type="text" name="search" value="<?php echo $search; ?>" placeholder="🔍 Tìm theo Tên hoặc Mã loại..." style="padding: 8px; width: 1100px; border: 1px solid #ccc; border-radius: 4px;">
+      <form action="category.php" method="GET" style="display: flex; gap: 10px; width: 100%;">
+        <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Tìm theo Tên hoặc Mã loại..." style="padding: 8px; flex: 1; border: 1px solid #ccc; border-radius: 4px; outline: none; font-family: inherit;">
         <button type="submit" class="btn-primary" style="padding: 8px 15px;">Tìm kiếm</button>
         <?php if($search != '') { ?>
-          <a href="category.php" class="btn-cancel" style="padding: 8px 15px; text-decoration: none; background: #6c757d; color: white; border-radius: 4px;">Hủy lọc</a>
+          <a href="category.php" class="btn-gray" style="padding: 8px 15px;">Hủy lọc</a>
         <?php } ?>
       </form>
     </div>
@@ -43,8 +43,8 @@ $result = $conn->query($sql);
           <tr>
             <th>Mã loại</th>
             <th>Tên loại</th>
-            <th>Trạng thái</th>
-            <th>Thao tác</th>
+            <th style="text-align: center;">Trạng thái</th>
+            <th style="text-align: center;">Thao tác</th>
           </tr>
         </thead>
         <tbody>
@@ -56,17 +56,17 @@ $result = $conn->query($sql);
 
                   echo "<tr>";
                     echo "<td>" . $row['category_code'] . "</td>";
-                    echo "<td>" . $row['category_name'] . "</td>";
-                    echo "<td><span class='status " . $status_class . "'>" . $status_text . "</span></td>";
+                    echo "<td><strong>" . htmlspecialchars($row['category_name']) . "</strong></td>";
+                    echo "<td style='text-align: center;'><span class='status " . $status_class . "'>" . $status_text . "</span></td>";
                     
                     echo "<td>
-                            <div class='actions'>
+                            <div class='actions' style='justify-content: center;'>
                               <a href='category-edit.php?id=" . $row['id'] . "' class='btn-edit'>Sửa</a>";
                               
                     if ($row['status'] == 'active') {
-                        echo "<a href='category-delete.php?id=" . $row['id'] . "' class='btn-delete' onclick=\"return confirm('Cảnh báo: Bạn có chắc chắn muốn ẩn dữ liệu này không?');\">Ẩn</a>";
+                        echo "<a href='category-delete.php?id=" . $row['id'] . "' class='btn-gray' onclick=\"return confirm('Bạn có chắc chắn muốn ẩn loại sản phẩm này không?');\">Ẩn</a>";
                     } else {
-                        echo "<a href='category-restore.php?id=" . $row['id'] . "' class='btn-edit' style='background-color: #28a745; color: white;' onclick=\"return confirm('Khôi phục loại sản phẩm này?');\">Bật</a>";
+                        echo "<a href='category-restore.php?id=" . $row['id'] . "' class='btn-primary' style='background-color: #28a745;' onclick=\"return confirm('Khôi phục loại sản phẩm này?');\">Bật</a>";
                     }
                     
                     echo "    </div>
@@ -74,7 +74,7 @@ $result = $conn->query($sql);
                   echo "</tr>";
               }
           } else {
-              echo "<tr><td colspan='4' style='text-align: center;'>Không tìm thấy loại sản phẩm nào!</td></tr>";
+              echo "<tr><td colspan='4' style='text-align: center; padding: 20px;'>Không tìm thấy loại sản phẩm nào!</td></tr>";
           }
           ?>
         </tbody>

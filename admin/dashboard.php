@@ -1,19 +1,26 @@
 <?php
-date_default_timezone_set('Asia/Ho_Chi_Minh');
+require_once 'check_admin.php';
 require_once '../config/database.php';
+date_default_timezone_set('Asia/Ho_Chi_Minh');
+
+$admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Quản trị viên';
 $today = date('Y-m-d');
-$sql_doanh_thu = "SELECT SUM(total_price) as tong_tien FROM orders WHERE DATE(order_date) = '$today' AND status IN ('delivered', 'shipped')";
+$sql_doanh_thu = "SELECT SUM(total_price) as tong_tien FROM orders WHERE DATE(order_date) = '$today' AND status = 'delivered'";
 $res_doanh_thu = $conn->query($sql_doanh_thu);
 $doanh_thu = $res_doanh_thu->fetch_assoc()['tong_tien'] ?? 0;
+
 $sql_don_hang = "SELECT COUNT(*) as so_don FROM orders WHERE status = 'pending'";
 $res_don_hang = $conn->query($sql_don_hang);
 $don_moi = $res_don_hang->fetch_assoc()['so_don'] ?? 0;
+
 $sql_ton_kho = "SELECT COUNT(*) as sap_het FROM products WHERE stock < 10 AND status = 'active'";
 $res_ton_kho = $conn->query($sql_ton_kho);
 $sap_het = $res_ton_kho->fetch_assoc()['sap_het'] ?? 0;
+
 $sql_khach = "SELECT COUNT(*) as so_khach FROM users WHERE role = 'user'";
 $res_khach = $conn->query($sql_khach);
 $khach_hang = $res_khach->fetch_assoc()['so_khach'] ?? 0;
+
 $sql_recent_orders = "SELECT * FROM orders ORDER BY id DESC LIMIT 5";
 $result_recent_orders = $conn->query($sql_recent_orders);
 
@@ -24,10 +31,7 @@ for ($i = 6; $i >= 0; $i--) {
     $day_of_week = date('N', strtotime("-$i days"));
     $labels = [1 => 'T2', 2 => 'T3', 3 => 'T4', 4 => 'T5', 5 => 'T6', 6 => 'T7', 7 => 'CN'];
     $label = $labels[$day_of_week];
-    $revenue_7_days[$date] = [
-        'label' => $label,
-        'total' => 0
-    ];
+    $revenue_7_days[$date] = ['label' => $label, 'total' => 0];
 }
 
 $start_date = date('Y-m-d', strtotime("-6 days"));
@@ -35,7 +39,7 @@ $end_date = date('Y-m-d');
 $sql_chart = "SELECT DATE(order_date) as order_day, SUM(total_price) as daily_total 
               FROM orders 
               WHERE DATE(order_date) BETWEEN '$start_date' AND '$end_date' 
-              AND status IN ('delivered', 'shipped')
+              AND status = 'delivered'
               GROUP BY DATE(order_date)";
 $res_chart = $conn->query($sql_chart);
 
@@ -68,7 +72,7 @@ if ($res_chart && $res_chart->num_rows > 0) {
   <header class="main-header">
    <h1>Trang quản trị</h1>
    <div class="user-section">
-    <span>Xin chào, <strong>Admin</strong></span>
+    <span>Xin chào, <strong><?php echo htmlspecialchars($admin_name); ?></strong></span>
     <button class="user-btn">
      <img src="../assets/images/icons/profile.png" alt="User Icon">
     </button>
@@ -141,19 +145,17 @@ if ($res_chart && $res_chart->num_rows > 0) {
                   $status_class = '';
                   $status_text = '';
                   switch($row['status']) {
-                      // Đã đồng bộ chữ và class với order-management.php
                       case 'pending': $status_class = 'pending'; $status_text = 'Chưa xử lý'; break; 
                       case 'confirmed': $status_class = 'confirmed'; $status_text = 'Đã xác nhận'; break;
-                      case 'shipped': $status_class = 'shipped'; $status_text = 'Đang giao'; break;
                       case 'delivered': $status_class = 'delivered'; $status_text = 'Đã giao'; break;
                       case 'cancelled': $status_class = 'cancelled'; $status_text = 'Đã hủy'; break;
                   }
 
                   echo "<tr>";
                     echo "<td>DH" . str_pad($row['id'], 3, '0', STR_PAD_LEFT) . "</td>";
-                    echo "<td>" . $row['receiver_name'] . "</td>";
+                    echo "<td>" . htmlspecialchars($row['receiver_name']) . "</td>";
                     echo "<td>" . date('d/m/Y H:i', strtotime($row['order_date'])) . "</td>";
-                    echo "<td>" . number_format($row['total_price'], 0, ',', '.') . "đ</td>";
+                    echo "<td><strong style='color:#e74c3c;'>" . number_format($row['total_price'], 0, ',', '.') . "đ</strong></td>";
                     echo "<td><span class='status " . $status_class . "'>" . $status_text . "</span></td>";
                   echo "</tr>";
               }

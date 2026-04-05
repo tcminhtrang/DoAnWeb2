@@ -18,7 +18,7 @@ $result_related = mysqli_query($conn, $sql_related);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $product['product_name']; ?> | Chicken Joy</title>
+    <title><?php echo htmlspecialchars($product['product_name']); ?> | Chicken Joy</title>
     <link rel="stylesheet" href="../css/Chitietmonan.css">
 </head>
 <body>
@@ -28,10 +28,10 @@ $result_related = mysqli_query($conn, $sql_related);
         <section class="product-detail">
             <div class="product-images">
                 <div class="main-image">
-                    <img src="../images/<?php echo $product['image']; ?>" alt="<?php echo $product['product_name']; ?>">
+                    <img src="../images/<?php echo htmlspecialchars($product['image']); ?>" alt="<?php echo htmlspecialchars($product['product_name']); ?>">
                 </div>
                 <div class="thumbnail-images">
-                    <img src="../images/<?php echo $product['image']; ?>" alt="Ảnh 1">
+                    <img src="../images/<?php echo htmlspecialchars($product['image']); ?>" alt="Ảnh 1">
                     <img src="../images/ga-ran-a1.jpg" alt="Mẫu">
                     <img src="../images/ga-ran-a2.jpg" alt="Mẫu">
                     <img src="../images/ga-ran-a3.jpg" alt="Mẫu">
@@ -39,9 +39,15 @@ $result_related = mysqli_query($conn, $sql_related);
             </div>
 
             <div class="product-info">
-                <h1 class="product-title"><?php echo $product['product_name']; ?></h1>
+                <h1 class="product-title"><?php echo htmlspecialchars($product['product_name']); ?></h1>
+                
                 <div class="ratings">
-                    <span class="star" style="color: #ffc107;">★★★★☆</span> (4.2) | 150 đánh giá | Còn hàng
+                    <span class="star" style="color: #ffc107;">★★★★☆</span> (4.2) | 150 đánh giá | 
+                    <?php if($product['stock'] > 0): ?>
+                        <span style="color: #28a745; font-weight: bold;">Còn hàng</span>
+                    <?php else: ?>
+                        <span style="color: #e74c3c; font-weight: bold;">Hết hàng</span>
+                    <?php endif; ?>
                 </div>
                 
                 <div class="price-section">
@@ -52,7 +58,7 @@ $result_related = mysqli_query($conn, $sql_related);
                 
                 <div class="description-box">
                     <h2>Mô tả sản phẩm</h2>
-                    <p><?php echo $product['description']; ?></p>
+                    <p><?php echo htmlspecialchars($product['description']); ?></p>
                 </div>
 
                 <div class="nutrition-info">
@@ -60,25 +66,31 @@ $result_related = mysqli_query($conn, $sql_related);
                         <i class="fas fa-leaf"></i> Thông tin dinh dưỡng
                     </h2>
                     <div class="nutri-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
-                        <div class="nutri-item"><strong>Năng lượng:</strong> <?php echo $product['calories']; ?> kcal</div>
-                        <div class="nutri-item"><strong>Chất đạm:</strong> <?php echo $product['protein']; ?>g</div>
-                        <div class="nutri-item"><strong>Tinh bột:</strong> <?php echo $product['carbs']; ?>g</div>
-                        <div class="nutri-item"><strong>Chất béo:</strong> <?php echo $product['fat']; ?>g</div>
+                        <div class="nutri-item"><strong>Năng lượng:</strong> <?php echo htmlspecialchars($product['calories'] ?? '0'); ?> kcal</div>
+                        <div class="nutri-item"><strong>Chất đạm:</strong> <?php echo htmlspecialchars($product['protein'] ?? '0'); ?>g</div>
+                        <div class="nutri-item"><strong>Tinh bột:</strong> <?php echo htmlspecialchars($product['carbs'] ?? '0'); ?>g</div>
+                        <div class="nutri-item"><strong>Chất béo:</strong> <?php echo htmlspecialchars($product['fat'] ?? '0'); ?>g</div>
                     </div>
                 </div>
 
                 <div class="order-section">
-                    <div class="quantity-control">
-                        <label for="quantity">Số lượng</label>
-                        <div class="quantity-input">
-                            <button type="button" class="btn-qty" data-type="minus">-</button>
-                            <input type="text" id="quantity" value="1" readonly>
-                            <button type="button" class="btn-qty" data-type="plus">+</button>
+                    <?php if($product['stock'] > 0): ?>
+                        <div class="quantity-control">
+                            <label for="quantity">Số lượng</label>
+                            <div class="quantity-input">
+                                <button type="button" class="btn-qty" data-type="minus">-</button>
+                                <input type="text" id="quantity" value="1" readonly>
+                                <button type="button" class="btn-qty" data-type="plus">+</button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="action-buttons">
-                        <button class="add-to-cart" id="addToCartBtn" data-id="<?php echo $id; ?>">Thêm vào giỏ hàng</button>
-                    </div>
+                        <div class="action-buttons">
+                            <button class="add-to-cart" id="addToCartBtn" data-id="<?php echo $id; ?>">Thêm vào giỏ hàng</button>
+                        </div>
+                    <?php else: ?>
+                        <div class="action-buttons">
+                            <button class="add-to-cart" disabled style="background-color: #ccc; cursor: not-allowed; width: 100%; border: none;">Sản phẩm hiện đang hết hàng</button>
+                        </div>
+                    <?php endif; ?>
                 </div>
                 
                 <div class="delivery-info">
@@ -93,12 +105,17 @@ $result_related = mysqli_query($conn, $sql_related);
             <h2>Sản phẩm tương tự</h2>
             <div class="product-list">
                 <?php while($item = mysqli_fetch_assoc($result_related)): ?>
-                <a href="Chitietmonan.php?id=<?php echo $item['id']; ?>">
+                <a href="Chitietmonan.php?id=<?php echo $item['id']; ?>" style="text-decoration: none;">
                     <div class="product-card">
-                        <img src="../images/<?php echo $item['image']; ?>" alt="<?php echo $item['product_name']; ?>">
-                        <h3><?php echo $item['product_name']; ?></h3>
+                        <img src="../images/<?php echo htmlspecialchars($item['image']); ?>" alt="<?php echo htmlspecialchars($item['product_name']); ?>">
+                        <h3><?php echo htmlspecialchars($item['product_name']); ?></h3>
                         <p><?php echo number_format($item['price'], 0, ',', '.'); ?>đ</p>
-                        <button class="add-to-cart-sm">Xem chi tiết</button>
+                        
+                        <?php if($item['stock'] > 0): ?>
+                            <button class="add-to-cart-sm">Xem chi tiết</button>
+                        <?php else: ?>
+                            <button class="add-to-cart-sm" disabled style="background-color: #ccc; color: #666; border: none; cursor: not-allowed;">Hết hàng</button>
+                        <?php endif; ?>
                     </div>
                 </a>
                 <?php endwhile; ?>
@@ -106,17 +123,7 @@ $result_related = mysqli_query($conn, $sql_related);
         </section>
     </main>
 
-    <footer class="footer">
-        <div class="footer-columns container">
-            <div class="col footer-info">
-                <h4>Chicken Joy</h4>
-                <p>Thức ăn nhanh chất lượng cao, giao hàng tận nơi trong 30 phút.</p>
-            </div>
-            <div class="col"><h4>Menu</h4><ul><li>Gà rán</li><li>Hamburger</li><li>Nước uống</li></ul></div>
-            <div class="col"><h4>Hỗ trợ</h4><ul><li>Chính sách giao hàng</li><li>Chính sách đổi trả</li><li>FAQ</li></ul></div>
-            <div class="col"><h4>Liên hệ</h4><p>Điện thoại: 0123.456.789</p><p>Email: info@fastfoodhub.com</p></div>
-        </div>
-    </footer>
+    <?php include '../includes/footer.php'; ?>
 
     <script>
         const isLoggedIn = <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>;

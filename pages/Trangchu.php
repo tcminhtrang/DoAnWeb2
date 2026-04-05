@@ -1,7 +1,36 @@
 <?php 
-// 1. Khởi tạo session để kiểm tra đăng nhập
+// 1. Khởi tạo session và kết nối DB
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
+}
+include '../config/database.php'; 
+
+
+$sql_featured = "SELECT * FROM products WHERE category LIKE '%Gà%' OR product_name LIKE '%Gà%' ORDER BY id DESC LIMIT 4";
+$result_featured = mysqli_query($conn, $sql_featured);
+
+// 3. Xử lý thêm vào giỏ hàng (Giữ nguyên logic của bạn)
+if (isset($_POST['add_to_cart'])) {
+    if (!isset($_SESSION['user_id'])) {
+        echo "<script>alert('Bạn cần đăng nhập để mua hàng!'); window.location.href='Dangnhap.php';</script>";
+        exit();
+    }
+    
+    $user_id = $_SESSION['user_id'];
+    $product_id = $_POST['product_id'];
+    
+    $check_cart = "SELECT * FROM cart WHERE user_id = $user_id AND product_id = $product_id";
+    $res_check = mysqli_query($conn, $check_cart);
+
+    if (mysqli_num_rows($res_check) > 0) {
+        $sql_action = "UPDATE cart SET quantity = quantity + 1 WHERE user_id = $user_id AND product_id = $product_id";
+    } else {
+        $sql_action = "INSERT INTO cart (user_id, product_id, quantity) VALUES ($user_id, $product_id, 1)";
+    }
+    
+    if (mysqli_query($conn, $sql_action)) {
+        echo "<script>alert('Đã thêm món gà vào giỏ hàng!'); window.location.href='Trangchu.php';</script>";
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -11,7 +40,6 @@ if (session_status() === PHP_SESSION_NONE) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chicken Joy - Món ăn nhanh ngon nhất</title>
     <link rel="stylesheet" href="../css/Trangchu.css"> 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 
@@ -64,56 +92,30 @@ if (session_status() === PHP_SESSION_NONE) {
     <section class="section featured-products-section">
         <div class="container">
             <h2>Sản phẩm nổi bật</h2>
-            <p>Những món ăn được yêu thích nhất</p>
+            <p>Các món gà được yêu thích nhất</p>
             <div class="products-grid">
                 
-                <div class="product-card">
-                    <a href="../pages/Chitietmonan.php">
-                        <img src="../images/ga-ran-1.jpg" alt="Gà rán giòn tan">
-                        <h3>Gà rán giòn tan</h3>
-                        <p>Gà tươi tẩm gia vị đặc biệt</p>
-                    </a>
-                    <div class="product-info">
-                        <span class="price">89.000đ</span>
-                        <button class="add-to-cart-btn btn-buy-now">+</button>
+                <?php if ($result_featured && mysqli_num_rows($result_featured) > 0): ?>
+                    <?php while($row = mysqli_fetch_assoc($result_featured)): ?>
+                    <div class="product-card">
+                        <a href="Chitietmonan.php?id=<?php echo $row['id']; ?>" style="text-decoration: none; color: inherit;">
+                            <img src="../images/<?php echo $row['image']; ?>" alt="<?php echo $row['product_name']; ?>">
+                            <h3><?php echo $row['product_name']; ?></h3>
+                            <p><?php echo $row['description']; ?></p>
+                        </a>
+                        <div class="product-info">
+                            <span class="price"><?php echo number_format($row['price'], 0, ',', '.'); ?>đ</span>
+                            
+                            <form method="POST" action="Trangchu.php" style="display: inline;">
+                                <input type="hidden" name="product_id" value="<?php echo $row['id']; ?>">
+                                <button type="submit" name="add_to_cart" class="add-to-cart-btn btn-buy-now">+</button>
+                            </form>
+                        </div>
                     </div>
-                </div>
-
-                <div class="product-card">
-                    <a href="../pages/Chitietmonan.php">
-                        <img src="../images/hamburger-1.jpg" alt="Burger bò phô mai">
-                        <h3>Burger bò phô mai</h3>
-                        <p>Thịt bò 100% kèm phô mai</p>
-                    </a>
-                    <div class="product-info">
-                        <span class="price">129.000đ</span>
-                        <button class="add-to-cart-btn btn-buy-now">+</button>
-                    </div>
-                </div>
-
-                <div class="product-card">
-                    <a href="../pages/Chitietmonan.php">
-                        <img src="../images/mi-y-1.jpg" alt="Mì Ý xốt cà chua">
-                        <h3>Mì Ý xốt cà chua</h3>
-                        <p>Mì Ý truyền thống Ý</p>
-                    </a>
-                    <div class="product-info">
-                        <span class="price">99.000đ</span>
-                        <button class="add-to-cart-btn btn-buy-now">+</button>
-                    </div>
-                </div>
-                
-                <div class="product-card">
-                    <a href="../pages/Chitietmonan.php">
-                        <img src="../images/khoai-tay-1.jpg" alt="Khoai tây chiên">
-                        <h3>Khoai tây chiên</h3>
-                        <p>Khoai tây vàng giòn ngon</p>
-                    </a>
-                    <div class="product-info">
-                        <span class="price">39.000đ</span>
-                        <button class="add-to-cart-btn btn-buy-now">+</button>
-                    </div>
-                </div>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <p style="grid-column: 1/-1; text-align: center;">Hiện chưa có món gà nào nổi bật.</p>
+                <?php endif; ?>
 
             </div>
             <div class="center-button">
@@ -126,7 +128,7 @@ if (session_status() === PHP_SESSION_NONE) {
         <div class="container promotion-content">
             <h2>Khuyến mãi đặc biệt</h2>
             <p>Giảm 30% cho đơn hàng từ 200.000đ</p>
-            <button class="btn btn-white btn-buy-now">Đặt hàng ngay</button>
+            <button class="btn btn-white btn-buy-now" onclick="window.location.href='Thucdon.php'">Đặt hàng ngay</button>
         </div>
     </section>
 
@@ -139,52 +141,18 @@ if (session_status() === PHP_SESSION_NONE) {
                 </div>
                 <p>Thực đơn phong phú, giao hàng nhanh, chỉ trong 30 phút.</p>
             </div>
-
-            <div class="footer-block">
-                <h3>Menu</h3>
-                <ul>
-                    <li><a href="#">Gà rán</a></li>
-                    <li><a href="#">Hamburger</a></li>
-                    <li><a href="#">Mì Ý</a></li>
-                    <li><a href="#">Nước uống</a></li>
-                </ul>
             </div>
-
-            <div class="footer-block">
-                <h3>Hỗ trợ</h3>
-                <ul>
-                    <li><a href="#">Liên hệ</a></li>
-                    <li><a href="#">Chính sách giao hàng</a></li>
-                    <li><a href="#">Cách thức đặt hàng</a></li>
-                    <li><a href="#">FAQ</a></li>
-                </ul>
-            </div>
-
-            <div class="footer-block contact-info">
-                <h3>Liên hệ</h3>
-                <p>☎️ 0987 654 321</p>
-                <p>✉️ info@chickenjoy.com</p>
-                <p>📍 123 Đường ABC, Quận 1, TP.HCM</p>
-            </div>
-        </div>
     </footer>
 
     <script>
-        // Lấy biến đăng nhập từ PHP
         const isLoggedIn = <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>;
 
-        // Lắng nghe sự kiện click trên tất cả các nút có class .btn-buy-now hoặc .add-to-cart-btn
         document.querySelectorAll('.btn-buy-now, .add-to-cart-btn').forEach(button => {
             button.addEventListener('click', function(e) {
                 if (!isLoggedIn) {
-                    e.preventDefault();
+                    e.preventDefault(); 
                     alert("Bạn cần Đăng nhập để thực hiện mua hàng!");
                     window.location.href = "Dangnhap.php";
-                } else {
-                    // Nếu là nút + (add-to-cart-btn) thì thông báo thêm giỏ hàng
-                    if(this.classList.contains('add-to-cart-btn')) {
-                        alert("Đã thêm món ăn vào giỏ hàng!");
-                    }
                 }
             });
         });

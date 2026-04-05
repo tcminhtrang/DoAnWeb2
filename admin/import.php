@@ -25,15 +25,15 @@
   <main class="main-content">
     <header class="main-header">
       <h1>Quản lý nhập hàng</h1>
-      <a href="../admin/import-add.php" class="btn-primary">+ Tạo phiếu nhập</a>
+      <a href="import-add.php" class="btn-primary">+ Tạo phiếu nhập</a>
     </header>
 
     <div class="table-toolbar">
-      <form action="import.php" method="GET" style="display: flex; gap: 10px;">
-        <input type="text" name="search" value="<?php echo $search; ?>" placeholder="🔍 Tìm theo Mã Phiếu..." style="padding: 8px; width: 1100px; border: 1px solid #ccc; border-radius: 4px;">
+      <form action="import.php" method="GET" style="display: flex; gap: 10px; width: 100%;">
+        <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Tìm theo Mã Phiếu..." style="padding: 8px; flex: 1; border: 1px solid #ccc; border-radius: 4px; outline: none; font-family: inherit;">
         <button type="submit" class="btn-primary" style="padding: 8px 15px;">Tìm kiếm</button>
         <?php if($search != '') { ?>
-          <a href="import.php" class="btn-cancel" style="padding: 8px 15px; text-decoration: none; background: #6c757d; color: white; border-radius: 4px;">Hủy lọc</a>
+          <a href="import.php" class="btn-gray" style="padding: 8px 15px;">Hủy lọc</a>
         <?php } ?>
       </form>
     </div>
@@ -53,24 +53,26 @@
   <?php
   if ($result && $result->num_rows > 0) {
       while($row = $result->fetch_assoc()) {
-          $status_class = ($row['status'] == 'completed') ? 'active' : 'new';
+          $status_class = ($row['status'] == 'completed') ? 'active' : 'pending';
           $status_text = ($row['status'] == 'completed') ? 'Hoàn thành' : 'Đang xử lý';
 
           echo "<tr>";
             echo "<td>" . $row['receipt_code'] . "</td>";
             echo "<td>" . date('d/m/Y', strtotime($row['import_date'])) . "</td>";
-            echo "<td>" . number_format($row['total_amount'], 0, ',', '.') . " VNĐ</td>";
+            echo "<td>" . number_format($row['total_amount'], 0, ',', '.') . "đ</td>";
             echo "<td><span class='status " . $status_class . "'>" . $status_text . "</span></td>";
-            echo "<td><div class='actions' style='display: flex; gap: 5px;'>";
-            echo "<a href='import-detail.php?id=" . $row['id'] . "' class='btn-action-primary' style='background: #17a2b8;'>Chi tiết</a>";
+            echo "<td><div class='actions' style='display: flex; gap: 5px; align-items: center;'>";
+            
+            echo "<a href='import-detail.php?id=" . $row['id'] . "' class='btn-view'>Chi tiết</a>";
+            
             if ($row['status'] == 'pending') {
-                echo "<a href='import-edit.php?id=" . $row['id'] . "' class='btn-edit ' '>Sửa</a>";
-                echo "<a href='import-delete.php?id=" . $row['id'] . "' class='btn-delete' onclick='return confirm(\"Xóa phiếu nhập đang xử lý này?\");'>Xóa</a>";
+                echo "<a href='import-edit.php?id=" . $row['id'] . "' class='btn-edit'>Sửa</a>";
+                echo "<a href='import-delete.php?id=" . $row['id'] . "' class='btn-gray' onclick='return confirm(\"Xóa phiếu nhập đang xử lý này?\");'>Xóa</a>";
             }
             echo "</div></td></tr>";
       }
   } else {
-      echo "<tr><td colspan='5' style='text-align:center;'>Không tìm thấy phiếu nhập nào!</td></tr>";
+      echo "<tr><td colspan='5' style='text-align:center; padding: 20px;'>Không tìm thấy phiếu nhập nào!</td></tr>";
   }
   ?>
         </tbody>

@@ -1,29 +1,20 @@
 <?php
 require_once '../config/database.php';
-
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-
-// Lấy thông tin đơn hàng đầy đủ
 $sql = "SELECT o.*, u.fullname 
         FROM orders o
         LEFT JOIN users u ON o.user_id = u.id
         WHERE o.id = $id";
-
 $order = mysqli_fetch_assoc(mysqli_query($conn, $sql));
 if (!$order) {
     echo "<h2>Không tìm thấy đơn hàng</h2>";
     exit;
 }
-
-// Bổ sung lấy thêm hình ảnh sản phẩm (p.image)
 $sqlDetail = "SELECT od.*, p.product_name, p.image
               FROM order_details od
               JOIN products p ON od.product_id = p.id
               WHERE od.order_id = $id";
-
 $details = mysqli_query($conn, $sqlDetail) or die(mysqli_error($conn));
-
-// Xử lý hiển thị phương thức thanh toán
 $paymentMethod = "Không xác định";
 if ($order['payment_method'] == 'cod') $paymentMethod = "Thanh toán khi nhận hàng (COD)";
 if ($order['payment_method'] == 'banking') $paymentMethod = "Chuyển khoản ngân hàng";
@@ -105,7 +96,7 @@ if ($order['payment_method'] == 'online') $paymentMethod = "Thanh toán Online";
         </header>
 
         <a href="order-management.php" class="back-btn">
-            Quay lại danh sách
+            &larr; Quay lại
         </a>
         
         <div class="detail-card">
@@ -168,7 +159,7 @@ if ($order['payment_method'] == 'online') $paymentMethod = "Thanh toán Online";
                 </thead>
                 <tbody>
                     <?php 
-                    $subTotal = 0; // Tính tổng tạm
+                    $subTotal = 0;
                     while ($item = mysqli_fetch_assoc($details)) { 
                         $itemTotal = $item['quantity'] * $item['price_at_purchase'];
                         $subTotal += $itemTotal;

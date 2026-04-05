@@ -28,11 +28,11 @@ $result = $conn->query($sql);
     </header>
     
     <div class="table-toolbar">
-      <form action="price.php" method="GET" style="display: flex; gap: 10px ">
-        <input type="text" name="search" value="<?php echo $search; ?>" placeholder="🔍 Tìm theo mã sản phẩm..." style="padding: 8px; width: 1100px; border: 1px solid #ccc; border-radius: 4px;">
+      <form action="price.php" method="GET" style="display: flex; gap: 10px; width: 100%;">
+        <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Tìm theo mã hoặc tên sản phẩm..." style="padding: 8px; flex: 1; border: 1px solid #ccc; border-radius: 4px; outline: none; font-family: inherit;">
         <button type="submit" class="btn-primary" style="padding: 8px 15px;">Tìm kiếm</button>
         <?php if($search != '') { ?>
-          <a href="price.php" class="btn-cancel" style="padding: 8px 15px; text-decoration: none; background: #6c757d; color: white; border-radius: 4px;">Hủy lọc</a>
+          <a href="price.php" class="btn-gray" style="padding: 8px 15px;">Hủy lọc</a>
         <?php } ?>
       </form>
     </div>
@@ -43,10 +43,10 @@ $result = $conn->query($sql);
           <tr>
             <th>Mã SP</th>
             <th>Tên sản phẩm</th>
-            <th class="text-center">Giá nhập (Vốn)</th>
-            <th class="text-center">% Lợi nhuận</th> 
-            <th class="text-center">Giá bán (VAT)</th>
-            <th>Thao tác</th>
+            <th style="text-align: center;">Giá nhập (Vốn)</th>
+            <th style="text-align: center;">% Lợi nhuận</th> 
+            <th style="text-align: center;">Giá bán (VAT)</th>
+            <th style="text-align: center;">Thao tác</th>
           </tr>
         </thead>
         <tbody>
@@ -55,23 +55,23 @@ $result = $conn->query($sql);
               while($row = $result->fetch_assoc()) {
                   echo "<tr>";
                     echo "<td>" . $row['product_code'] . "</td>";
-                    echo "<td>" . $row['product_name'] . "</td>";
+                    echo "<td><strong>" . htmlspecialchars($row['product_name']) . "</strong></td>";
                     
-                    echo "<td class='text-center'>" . number_format($row['import_price'], 0, ',', '.') . "đ</td>";
+                    echo "<td style='text-align: center;'>" . number_format($row['import_price'], 0, ',', '.') . "đ</td>";
                     $loi_nhuan_hien_thi = $row['profit_rate'] * 100;
-                    echo "<td class='text-center'><span style='color: #008000; font-weight: 500;'>" . $loi_nhuan_hien_thi . "%</span></td>";
+                    echo "<td style='text-align: center;'><span class='status active' style='background-color: #e8f5e9; color: #28a745;'>" . $loi_nhuan_hien_thi . "%</span></td>";
                     
-                    echo "<td class='text-center' style='font-weight: bold;'>" . number_format($row['price'], 0, ',', '.') . "đ</td>";
+                    echo "<td style='text-align: center; font-weight: bold; color: #e74c3c;'>" . number_format($row['price'], 0, ',', '.') . "đ</td>";
                     
-                    echo "<td>
-                            <div class='actions'>
+                    echo "<td style='text-align: center;'>
+                            <div class='actions' style='justify-content: center;'>
                               <a href='price-edit.php?id=" . $row['id'] . "' class='btn-edit'>Sửa giá</a>
                             </div>
                           </td>";
                   echo "</tr>";
               }
           } else {
-              echo "<tr><td colspan='6' class='text-center'>Không tìm thấy sản phẩm!</td></tr>";
+              echo "<tr><td colspan='6' style='text-align: center; padding: 20px;'>Không tìm thấy sản phẩm!</td></tr>";
           }
           ?>
         </tbody>

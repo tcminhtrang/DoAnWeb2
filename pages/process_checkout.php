@@ -112,12 +112,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
         
         $order_id = mysqli_insert_id($conn);
 
-        // B. Thêm chi tiết đơn hàng
         foreach ($cart_items as $item) {
             $p_id = $item['id']; 
             $qty = $item['quantity']; 
             $price = $item['price'];
             
+            // 1. Chỉ lưu vào bảng order_details 
             $sql_detail = "INSERT INTO order_details (order_id, product_id, quantity, price_at_purchase) 
                            VALUES ($order_id, $p_id, $qty, $price)";
             if (!mysqli_query($conn, $sql_detail)) throw new Exception(mysqli_error($conn));
