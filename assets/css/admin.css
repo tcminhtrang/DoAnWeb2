@@ -374,6 +374,7 @@ border-bottom: 1px solid #eee;
 padding: 12px; 
 border-bottom: 1px solid #eee;
 text-align: left;
+vertical-align: middle;
 }
 
 .data-table th:first-child {
@@ -399,6 +400,7 @@ background-color: #fff0e6;
 .data-table th:last-child,
 .data-table td:last-child {
 min-width: 190px;
+vertical-align: middle;
 text-align: center;
 }
 .thumb {
@@ -431,11 +433,11 @@ background: #f4f4f4;
 color: var(--main-color);
 font-weight: bold;
 }
-.status.new {
+.status.pending {
 background: #fff6d6;
 color: #d4a200;
 }
-.status.processing {
+.status.confirmed {
 background: #eaf3ff;
 color: #007bff;
 }
@@ -560,16 +562,25 @@ background: #5a6268;
 
 .table-toolbar { 
 display: flex;
-gap: 10px;
 margin-bottom: 15px;
+gap: 12px;
 padding: 20px 20px 0 20px; 
 }
+
+/* Đảm bảo form bao quanh input chiếm toàn bộ chiều ngang */
+.table-toolbar form {
+    display: flex;
+    width: 100%; 
+}
+
 .table-toolbar input {
-flex: 1;
-padding: 14px 16px; 
-border: 1px solid #ccc;
-border-radius: 12px; 
-font-size: 15px; 
+    flex: 1; /* Để input giãn ra hết cỡ trong form */
+    width: 100%; /* Đảm bảo chiếm 100% */
+    padding: 14px 16px; 
+    border: 1px solid #ccc;
+    border-radius: 12px; 
+    font-size: 15px;
+    transition: all 0.2s ease;
 }
 
 .btn-login {
@@ -634,7 +645,7 @@ background: #555;
 display: flex;
 justify-content: center;
 align-items: center;
-gap: 6px;
+gap: 8px;
 flex-wrap: wrap;
 }
 .actions button,
@@ -707,7 +718,32 @@ border: none;
 background-color: #b3deff;
 opacity: 1;
 }
+.btn-gray {
+    display: inline-block;
+    padding: 8px 15px;
+    border-radius: 4px;
+    text-decoration: none;
+    background: #6c757d; 
+    color: white;
+    border: none;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
 
+.btn-gray:hover { 
+    background: #5a6268; 
+}
+
+.combo-input {
+    width: 100%; 
+    padding: 8px; 
+    border-radius: 4px; 
+    border: 1px solid #ccc; 
+    font-family: inherit; 
+    font-size: 14px;
+}
 @keyframes buttonPop {
 0% { transform: scale(0.9); }
 50% { transform: scale(1.05); }
@@ -969,12 +1005,45 @@ transform: translateX(-3px);
 }
 
 .detail-card {
-background: #fffaf5;
-border-radius: 15px;
-padding: 25px 30px;
-box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-line-height: 1.8;
-margin: 0 20px; 
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.order-header-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #ffffff;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.order-header-info h2 { 
+    margin-bottom: 5px; 
+    color: #333; 
+}
+
+.order-summary {
+    text-align: right;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 2px dashed #ffffff;
+    font-size: 15px;
+}
+
+.order-summary .total-price {
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important; /* Phông chữ chuẩn Tiếng Việt */
+    font-size: 22px;
+    color: #e74c3c;
+    margin-top: 10px;
+    font-weight: 700; /* Ép độ đậm vừa phải để không bị vỡ nét */
+}
+
+.order-summary .total-price strong {
+    font-weight: 700;
 }
 .detail-card h2,
 .detail-card h3,
@@ -1268,4 +1337,208 @@ h1 {
   display: flex;
   align-items: center;
   gap: 15px;
+}
+
+/* ===== MODAL ===== */
+.modal {
+  display: none; 
+  position: fixed;
+  z-index: 999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* nội dung modal */
+.modal-content {
+  background: #fff;
+  width: 400px;
+  margin: 8% auto;
+  padding: 25px;
+  border-radius: 10px;
+  position: relative;
+  animation: fadeIn 0.3s ease;
+}
+
+/* animation */
+@keyframes fadeIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* input */
+.modal-content input {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+/* button group */
+.modal-content button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-content button[type="submit"] {
+  background: #28a745;
+  color: white;
+}
+
+.modal-content button[type="submit"]:hover {
+  background: #218838;
+  transform: translateY(-2px);
+}
+
+.modal-content button[type="button"] {
+  background: #6c757d;
+  color: white;
+}
+
+.modal-content button[type="button"]:hover {
+  background: #5a6268;
+  transform: translateY(-2px);
+}
+
+button:active, a:active {
+  transition: all 0.2s ease;
+}
+
+.modal-content button:active {
+  animation: buttonPop 0.6s ease;
+}
+
+.filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    padding: 20px 20px 0 20px;
+}
+
+.filter-group {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+/* --- CSS CHO NÚT CẬP NHẬT MÀU XANH LÁ --- */
+.btn-update {
+    background: #28a745; /* Màu xanh lá */
+    color: #fff;
+    padding: 8px 16px;  /* Giảm padding để nút nhỏ lại */
+    border: none;
+    border-radius: 8px; /* Bo góc 8px cho thanh thoát */
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 13px;    /* Chữ nhỏ hơn (bằng size bảng dữ liệu) */
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;           /* Khoảng cách giữa icon và chữ */
+    min-width: 100px;   /* Độ rộng tối thiểu vừa phải */
+    outline: none;
+    line-height: 1.2;
+}
+
+.btn-update:hover {
+    background: #218838; /* Xanh đậm hơn khi hover */
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.25); /* Đổ bóng màu xanh nhẹ */
+    transform: translateY(-2px); /* Nhích nhẹ lên tạo cảm giác nổi */
+}
+
+/* Hiệu ứng Bounce khi click - dùng lại keyframe buttonPop của bạn */
+.btn-update:active {
+    animation: buttonPop 0.6s ease;
+    background: #1e7e34;
+    transform: translateY(0);
+}
+
+/* Icon bên trong nút (nếu có) */
+.btn-update img {
+    width: 14px;
+    height: 14px;
+    filter: brightness(0) invert(1); /* Chuyển icon sang trắng */
+}
+
+/* Container chứa các nút nhanh */
+.quick-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 5px;
+    justify-content: center;
+}
+
+/* Định dạng chung cho các link thao tác nhanh */
+.status-link {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+    color: #fff !important; /* Ép chữ luôn màu trắng cho dễ đọc */
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+/* Màu Xanh Dương - Xác nhận (Đậm từ đầu) */
+.btn-confirm {
+    background-color: #3498db;
+    border: 1px solid #2980b9;
+}
+.btn-confirm:hover {
+    background-color: #2980b9; /* Di chuột vào thì đậm hơn tí nữa hoặc sáng lên tùy ý */
+    box-shadow: 0 2px 5px rgba(52, 152, 219, 0.4);
+}
+
+/* Màu Xanh Lá - Giao hàng */
+.btn-delivery {
+    background-color: #2ecc71;
+    border: 1px solid #27ae60;
+}
+.btn-delivery:hover {
+    background-color: #27ae60;
+    box-shadow: 0 2px 5px rgba(46, 204, 113, 0.4);
+}
+
+/* Màu Đỏ - Huỷ đơn */
+.btn-cancel-order {
+    background-color: #e74c3c;
+    border: 1px solid #c0392b;
+}
+.btn-cancel-order:hover {
+    background-color: #c0392b;
+    box-shadow: 0 2px 5px rgba(231, 76, 60, 0.4);
+}
+
+/* Màu Vàng - Hủy xác nhận (Quay về trạng thái chờ) */
+.btn-undo {
+    background-color: #f1c40f; /* Màu vàng của trạng thái pending */
+    border: 1px solid #f39c12;
+}
+
+.btn-undo:hover {
+    background-color: #f39c12;
+    box-shadow: 0 2px 5px rgba(241, 196, 15, 0.4);
+}
+
+/* Đảm bảo chữ trắng trên nền vàng vẫn dễ đọc */
+.btn-undo {
+    color: #fff !important;
 }
