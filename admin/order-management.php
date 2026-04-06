@@ -6,12 +6,13 @@ if (isset($_SESSION['success_msg'])) {
     $success_msg = $_SESSION['success_msg'];
     unset($_SESSION['success_msg']);
 }
+
 $where = "1=1";
+
 if (!empty($_GET['fromDate'])) {
     $from = $_GET['fromDate'];
     $where .= " AND o.order_date >= '$from 00:00:00'";
 }
-
 if (!empty($_GET['toDate'])) {
     $to = $_GET['toDate'];
     $where .= " AND o.order_date <= '$to 23:59:59'";
@@ -20,11 +21,20 @@ if (!empty($_GET['status']) && $_GET['status'] != 'all') {
     $status = $_GET['status'];
     $where .= " AND o.status = '$status'";
 }
+
+$wardSql = "SELECT DISTINCT ward FROM orders WHERE ward IS NOT NULL AND ward != '' ORDER BY ward ASC";
+$wardResult = mysqli_query($conn, $wardSql);
+
+if (!empty($_GET['ward']) && $_GET['ward'] != 'all') {
+    $ward = mysqli_real_escape_string($conn, $_GET['ward']);
+    $where .= " AND o.ward = '$ward'";
+}
+
 $sql = "SELECT o.*, u.fullname 
         FROM orders o
         JOIN users u ON o.user_id = u.id
         WHERE $where
-        ORDER BY o.id DESC";
+        ORDER BY o.ward ASC, o.id DESC";
 
 $result = mysqli_query($conn, $sql);
 ?>
@@ -36,8 +46,6 @@ $result = mysqli_query($conn, $sql);
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="../assets/images/logo-1.png" />
     <title> ChickenJoy Admin | Quản Lý Đơn Đặt Hàng</title>
-
-    <link rel="icon" type="image/png" href="../assets/images/logo-1.png" />
     <link rel="stylesheet" href="../assets/css/admin.css" />
 </head>
 
@@ -68,9 +76,7 @@ $result = mysqli_query($conn, $sql);
                 <div class="filter">
                     <label>Tình trạng:</label>
                     <select id="statusFilter">
-                        <?php
-                        $currentStatus = isset($_GET['status']) ? $_GET['status'] : 'all';
-                        ?>
+                        <?php $currentStatus = isset($_GET['status']) ? $_GET['status'] : 'all'; ?>
                         <option value="all" <?= $currentStatus == 'all' ? 'selected' : '' ?>>Tất cả</option>
                         <option value="pending" <?= $currentStatus == 'pending' ? 'selected' : '' ?>>Chưa xử lý</option>
                         <option value="confirmed" <?= $currentStatus == 'confirmed' ? 'selected' : '' ?>>Đã xác nhận</option>
@@ -78,9 +84,25 @@ $result = mysqli_query($conn, $sql);
                         <option value="cancelled" <?= $currentStatus == 'cancelled' ? 'selected' : '' ?>>Đã hủy</option>
                     </select>
                 </div>
+                
+                <div class="filter">
+                    <label>Khu vực:</label>
+                    <select id="wardFilter">
+                        <?php $currentWard = isset($_GET['ward']) ? $_GET['ward'] : 'all'; ?>
+                        <option value="all" <?= $currentWard == 'all' ? 'selected' : '' ?>>Tất cả các phường</option>
+                        <?php 
+                        if(isset($wardResult) && mysqli_num_rows($wardResult) > 0) {
+                            while ($w = mysqli_fetch_assoc($wardResult)) {
+                                $selected = ($currentWard == $w['ward']) ? 'selected' : '';
+                                echo "<option value='" . htmlspecialchars($w['ward']) . "' $selected>" . htmlspecialchars($w['ward']) . "</option>";
+                            }
+                        }
+                        ?>
+                    </select>
+                </div>
             </div>
-            <div class="filter">
-                <button id="filterBtn" class="btn-primary">Lọc</button>
+            <div class="filter" style="display: flex; align-items: flex-end;">
+                <button id="filterBtn" class="btn-primary" style="height: 38px;">Lọc</button>
             </div>
         </div>
 
@@ -90,7 +112,7 @@ $result = mysqli_query($conn, $sql);
                     <tr>
                         <th>Mã đơn</th>
                         <th>Khách hàng</th>
-                        <th>Ngày đặt</th>
+                        <th>Khu vực (Phường)</th> <th>Ngày đặt</th>
                         <th>Tổng tiền</th>
                         <th>Tình trạng</th>
                         <th>Thao tác</th>
@@ -104,7 +126,12 @@ $result = mysqli_query($conn, $sql);
                         <tr>
                             <td>DH<?= str_pad($row['id'], 3, '0', STR_PAD_LEFT) ?></td>
                             <td><?= htmlspecialchars($row['fullname']) ?></td>
-                            <td><?= date('Y-m-d H:i', strtotime($row['order_date'])) ?></td>
+                            
+                            <td style="font-weight: 500; color: #0e7a3b;">
+                                <?= !empty($row['ward']) ? htmlspecialchars($row['ward']) : 'Chưa cập nhật' ?>
+                            </td>
+
+                            <td><?= date('d/m/Y H:i', strtotime($row['order_date'])) ?></td>
                             <td style="font-weight: bold; color: #e74c3c;"><?= number_format($row['total_price']) ?>đ</td>
 
                             <td>
@@ -136,9 +163,8 @@ $result = mysqli_query($conn, $sql);
                                         break;
                                 }
                                 ?>
-
                                 <span class="status <?= $class ?>">
-                                    <img src="../assets/images/icons/<?= $icon ?>" class="icon">
+                                    <img src="../assets/images/icons/<?= $icon ?>" class="icon" onerror="this.style.display='none'">
                                     <?= $statusText ?>
                                 </span>
                             </td>
@@ -146,49 +172,32 @@ $result = mysqli_query($conn, $sql);
                             <td>
                                 <div class="actions">
                                     <a href="order-detail.php?id=<?= $row['id'] ?>" class="btn-view">
-                                        <img src="../assets/images/icons/eye.png" alt="Xem chi tiết" class="icon-eye" />
+                                        <img src="../assets/images/icons/eye.png" alt="Xem" class="icon-eye" onerror="this.style.display='none'" />
                                         <span>Xem chi tiết</span>
                                     </a>
 
                                     <div class="quick-actions">
                                         <?php if ($row['status'] == 'pending'): ?>
-                                            <a href="update-order-status.php?id=<?= $row['id'] ?>&status=confirmed"
-                                                class="status-link btn-confirm"
-                                                onclick="return confirm('Xác nhận đơn hàng này?')">Xác nhận</a>
-                                            <a href="update-order-status.php?id=<?= $row['id'] ?>&status=delivered"
-                                                class="status-link btn-delivery"
-                                                onclick="return confirm('Giao hàng ngay?')">Giao</a>
-                                            <a href="update-order-status.php?id=<?= $row['id'] ?>&status=cancelled"
-                                                class="status-link btn-cancel-order"
-                                                onclick="return confirm('Hủy đơn hàng này?')">Huỷ</a>
-
+                                            <a href="update-order-status.php?id=<?= $row['id'] ?>&status=confirmed" class="status-link btn-confirm" onclick="return confirm('Xác nhận đơn hàng này?')">Xác nhận</a>
+                                            <a href="update-order-status.php?id=<?= $row['id'] ?>&status=delivered" class="status-link btn-delivery" onclick="return confirm('Giao hàng ngay?')">Giao</a>
+                                            <a href="update-order-status.php?id=<?= $row['id'] ?>&status=cancelled" class="status-link btn-cancel-order" onclick="return confirm('Hủy đơn hàng này?')">Huỷ</a>
                                         <?php elseif ($row['status'] == 'confirmed'): ?>
-                                            <a href="update-order-status.php?id=<?= $row['id'] ?>&status=pending"
-                                                class="status-link btn-undo"
-                                                onclick="return confirm('Đưa đơn hàng này quay lại trạng thái Chưa xử lý?')">Hủy
-                                                xác nhận</a>
-
-                                            <a href="update-order-status.php?id=<?= $row['id'] ?>&status=delivered"
-                                                class="status-link btn-delivery"
-                                                onclick="return confirm('Bắt đầu giao hàng?')">Giao</a>
-                                            <a href="update-order-status.php?id=<?= $row['id'] ?>&status=cancelled"
-                                                class="status-link btn-cancel-order"
-                                                onclick="return confirm('Vẫn muốn hủy đơn này?')">Huỷ</a>
+                                            <a href="update-order-status.php?id=<?= $row['id'] ?>&status=pending" class="status-link btn-undo" onclick="return confirm('Đưa đơn hàng này quay lại trạng thái Chưa xử lý?')">Hủy xác nhận</a>
+                                            <a href="update-order-status.php?id=<?= $row['id'] ?>&status=delivered" class="status-link btn-delivery" onclick="return confirm('Bắt đầu giao hàng?')">Giao</a>
+                                            <a href="update-order-status.php?id=<?= $row['id'] ?>&status=cancelled" class="status-link btn-cancel-order" onclick="return confirm('Vẫn muốn hủy đơn này?')">Huỷ</a>
                                         <?php endif; ?>
                                     </div>
                                 </div>
                             </td>
-
                         </tr>
                     <?php 
                         } 
                     } else {
-                        echo "<tr><td colspan='6' style='text-align: center; padding: 20px;'>Không có đơn hàng nào!</td></tr>";
+                        echo "<tr><td colspan='7' style='text-align: center; padding: 20px;'>Không có đơn hàng nào!</td></tr>";
                     }
                     ?>
                 </tbody>
             </table>
-
         </section>
     </main>
 
@@ -197,12 +206,11 @@ $result = mysqli_query($conn, $sql);
             let from = document.getElementById("fromDate").value;
             let to = document.getElementById("toDate").value;
             let status = document.getElementById("statusFilter").value;
+            let ward = document.getElementById("wardFilter").value; // Lấy giá trị phường
 
-            window.location.href =
-                `order-management.php?fromDate=${from}&toDate=${to}&status=${status}`;
+            window.location.href = `order-management.php?fromDate=${from}&toDate=${to}&status=${status}&ward=${ward}`;
         });
     </script>
 
 </body>
-
 </html>

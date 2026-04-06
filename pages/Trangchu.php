@@ -6,7 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 include '../config/database.php'; 
 
 
-$sql_featured = "SELECT * FROM products WHERE category LIKE '%Gà%' OR product_name LIKE '%Gà%' ORDER BY id DESC LIMIT 4";
+$sql_featured = "SELECT * FROM products WHERE product_name LIKE '%Gà%' ORDER BY id DESC LIMIT 4";
 $result_featured = mysqli_query($conn, $sql_featured);
 
 // 3. Xử lý thêm vào giỏ hàng (Giữ nguyên logic của bạn)

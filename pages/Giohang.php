@@ -26,11 +26,6 @@ $total_money = 0;
             <div class="cart-box">
                 <h2>Giỏ hàng của bạn</h2>
                 <p>Bạn có <?php echo $items_count; ?> sản phẩm trong giỏ hàng</p>
-
-                <?php while($row = mysqli_fetch_assoc($result)): 
-                    $subtotal = $row['price'] * $row['quantity'];
-                    $total_money += $subtotal;
-                ?>
                 <?php while($row = mysqli_fetch_assoc($result)): 
                     $subtotal = $row['price'] * $row['quantity'];
                     $total_money += $subtotal;
