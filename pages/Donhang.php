@@ -13,17 +13,43 @@ $user_id = $_SESSION['user_id'];
 if (isset($_GET['action']) && $_GET['action'] == 'cancel' && isset($_GET['order_id'])) {
     $cancel_id = (int)$_GET['order_id'];
     
-    // Kiểm tra xem đơn hàng có thuộc về user này và đang ở trạng thái pending (chưa được cửa hàng xử lý) không
+    // Kiểm tra xem đơn hàng có thuộc về user này và đang ở trạng thái pending không
     $check_sql = "SELECT id FROM orders WHERE id = $cancel_id AND user_id = $user_id AND status = 'pending'";
     $check_res = mysqli_query($conn, $check_sql);
     
     if (mysqli_num_rows($check_res) > 0) {
-        // Thực hiện hủy đơn và ghi chú lại
-        $cancel_sql = "UPDATE orders SET status = 'cancelled', order_note = 'Khách hàng tự hủy đơn.' WHERE id = $cancel_id";
-        if(mysqli_query($conn, $cancel_sql)) {
-            echo "<script>alert('Hủy đơn hàng thành công!'); window.location.href='Donhang.php';</script>";
+        mysqli_begin_transaction($conn);
+        try {
+            // 1. Thực hiện hủy đơn
+            $cancel_sql = "UPDATE orders SET status = 'cancelled', order_note = 'Khách hàng tự hủy đơn.' WHERE id = $cancel_id";
+            if(!mysqli_query($conn, $cancel_sql)) throw new Exception();
+
+            // 2. Xử lý hoàn điểm/thu hồi điểm
+            // Lấy tổng số điểm đã thay đổi từ đơn hàng này (cả điểm cộng và điểm trừ)
+            $point_sql = "SELECT SUM(points_change) as net_points FROM point WHERE order_id = $cancel_id AND user_id = $user_id";
+            $point_res = mysqli_query($conn, $point_sql);
+            $net_points = mysqli_fetch_assoc($point_res)['net_points'] ?? 0;
+
+            if ($net_points != 0) {
+                // Trả lại trạng thái điểm cũ (đảo ngược dấu: nếu đã cộng thì trừ, đã trừ thì cộng)
+                $refund_points = -$net_points;
+                
+                // Ghi nhận lịch sử hoàn điểm
+                $reason_refund = "Hoàn điểm do hủy đơn hàng #" . $cancel_id;
+                $sql_history_refund = "INSERT INTO point (user_id, order_id, points_change, reason) 
+                                       VALUES ($user_id, $cancel_id, $refund_points, '$reason_refund')";
+                if (!mysqli_query($conn, $sql_history_refund)) throw new Exception();
+
+                // Cập nhật lại ví điểm của user
+                $sql_update_user = "UPDATE users SET points = points + $refund_points WHERE id = $user_id";
+                if (!mysqli_query($conn, $sql_update_user)) throw new Exception();
+            }
+
+            mysqli_commit($conn);
+            echo "<script>alert('Hủy đơn hàng và hoàn điểm thành công!'); window.location.href='Donhang.php';</script>";
             exit();
-        } else {
+        } catch (Exception $e) {
+            mysqli_rollback($conn);
             echo "<script>alert('Lỗi: Không thể hủy đơn hàng ngay lúc này!');</script>";
         }
     } else {

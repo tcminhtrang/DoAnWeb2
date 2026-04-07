@@ -3,20 +3,7 @@ require_once '../config/database.php';
 
 $success_msg = "";
 $error_msg = "";
-
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_points'])) {
-    $new_rate = (int)$_POST['money_per_point'];
-    if ($new_rate > 0) {
-        $conn->query("UPDATE points SET config_value = $new_rate WHERE config_key = 'money_per_point'");
-        $success_msg = "Cập nhật quy tắc tích điểm thành công!";
-    } else {
-        $error_msg = "Lỗi: Số tiền quy đổi phải lớn hơn 0!";
-    }
-}
-
-$sql_get_points = "SELECT config_value FROM points WHERE config_key = 'money_per_point'";
-$res_points = $conn->query($sql_get_points);
-$current_rate = ($res_points->num_rows > 0) ? $res_points->fetch_assoc()['config_value'] : 10000;
+$current_rate = 10000;
 
 if (isset($_GET['action']) && isset($_GET['id'])) {
     $id = (int)$_GET['id'];
@@ -61,14 +48,12 @@ $result_promo = $conn->query($sql_promo);
     <?php endif; ?>
 
     <section class="form-section" style="margin-bottom: 25px; padding: 20px; background: #fffaf5; border: 1px dashed #ff6b35; border-radius: 8px;">
-        <h3 style="margin-bottom: 15px; color: #ff6b35;">Thiết lập quy tắc Tích điểm</h3>
-        <form action="promotion.php" method="POST" style="display: flex; align-items: center; gap: 15px;">
-            <label style="font-weight: bold;">Số tiền hóa đơn để tích 1 điểm (VNĐ):</label>
-            <input type="number" id="rate-input" name="money_per_point" value="<?php echo $current_rate; ?>" min="1000" step="1000" required style="padding: 8px; width: 150px; font-size: 16px; font-weight: bold; color: #e74c3c; text-align: right; border: 1px solid #ccc; border-radius: 4px; outline: none;">
-            <button type="submit" name="update_points" class="btn-primary" style="padding: 8px 15px;">Lưu thiết lập</button>
-        </form>
+        <h3 style="margin-bottom: 10px; color: #ff6b35;">Quy tắc Tích điểm hiện tại</h3>
+        <p style="font-size: 14px; color: #333; margin-bottom: 5px;">
+            Hệ thống đang áp dụng tỷ lệ quy đổi: <strong>10.000đ = 1 điểm thưởng</strong>.
+        </p>
         <p style="font-size: 13px; color: #666; margin-top: 10px; margin-bottom: 0;">
-            * Ví dụ: Với mức thiết lập <strong id="live-rate"><?php echo number_format($current_rate, 0, ',', '.'); ?></strong><strong>đ</strong>, hóa đơn <strong>150.000đ</strong> của khách sẽ tích được <strong id="live-points" style="color: #e74c3c; font-size: 15px;"><?php echo floor(150000 / $current_rate); ?></strong> điểm.
+            * Ví dụ: Hóa đơn thanh toán <strong>150.000đ</strong> của khách sẽ tự động hệ thống tích cho <strong style="color: #e74c3c; font-size: 15px;">15</strong> điểm.
         </p>
     </section>
 

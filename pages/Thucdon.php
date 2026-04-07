@@ -100,7 +100,6 @@ $query_string = "search=" . urlencode($raw_input) . "&category=" . urlencode($ca
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thực Đơn - Chicken Joy</title>
     <link rel="stylesheet" href="../css/Thucdon.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
 

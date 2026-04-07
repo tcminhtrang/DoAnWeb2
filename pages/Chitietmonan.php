@@ -8,9 +8,8 @@ $result = mysqli_query($conn, $sql);
 $product = mysqli_fetch_assoc($result);
 
 if (!$product) { header("Location: Thucdon.php"); exit(); }
-
-$cat = $product['category'];
-$sql_related = "SELECT * FROM products WHERE category = '$cat' AND id != $id LIMIT 4";
+$cat_id = $product['category_id'];
+$sql_related = "SELECT * FROM products WHERE category_id = $cat_id AND id != $id LIMIT 4";
 $result_related = mysqli_query($conn, $sql_related);
 ?>
 <!DOCTYPE html>
@@ -120,8 +119,9 @@ $result_related = mysqli_query($conn, $sql_related);
                 </a>
                 <?php endwhile; ?>
             </div>
-        </section>
-    </main>
+        </section> 
+        <br>
+    </main> 
 
     <?php include '../includes/footer.php'; ?>
 

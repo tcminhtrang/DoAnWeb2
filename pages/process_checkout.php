@@ -68,12 +68,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
         }
     }
 
-    // 3.2 Check Điểm tích lũy (1 điểm = 1000đ)
     // 3.2 Check Điểm tích lũy
     if ($use_points && $current_points > 0) {
-        // Query lấy giá trị quy đổi 1 điểm = ? VNĐ từ CSDL
-        $config_spend_query = mysqli_query($conn, "SELECT config_value FROM points WHERE config_key = 'point_to_money'");
-        $point_to_money = mysqli_fetch_assoc($config_spend_query)['config_value'] ?? 1000;
+        $point_to_money = 1000; // ĐÃ XÓA TRUY VẤN SQL, FIX CỨNG TỶ LỆ QUY ĐỔI
 
         $points_discount_value = $current_points * $point_to_money;
         
@@ -93,10 +90,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
     $final_price = $total_price - $discount_amount;
     if ($final_price < 0) $final_price = 0;
 
-    // 3.3 Tính điểm nhận được sau đơn này (Lấy từ bảng config: 10000đ = 1 điểm)
-    $config_query = mysqli_query($conn, "SELECT config_value FROM points WHERE config_key = 'money_per_point'");
-    $config_data = mysqli_fetch_assoc($config_query);
-    $money_per_point = $config_data['config_value'] ?? 10000;
+    // 3.3 Tính điểm nhận được sau đơn này (10000đ = 1 điểm)
+    $money_per_point = 10000; // ĐÃ XÓA TRUY VẤN SQL, FIX CỨNG LUẬT TÍCH ĐIỂM
     
     $points_earned = floor($final_price / $money_per_point);
 

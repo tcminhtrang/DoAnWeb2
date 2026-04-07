@@ -8,7 +8,9 @@
     --primary-color: #ff6600; 
     --text-color: #333;
     --light-text-color: #666;
+    --dark-footer-bg: #222; /* THÊM DÒNG NÀY */
 }
+
 
 
 body {
@@ -320,46 +322,84 @@ body {
     cursor: pointer;
 }
 
-/* 5. Chân trang (Footer) */
-.footer {
-    background-color: #222;
-    color: #ddd;
-    padding: 30px 0;
-    margin-top: 50px;
+
+.main-footer {
+    background-color: var(--dark-footer-bg);
+    color: #fffdfd;
+    padding: 30px 0 10px;
 }
-.footer-columns {
-    display: flex;
-    justify-content: space-between;
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 2fr; 
     gap: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #333;
 }
-.footer-columns .col {
-    flex: 1;
+
+.footer-col h4 {
+    color: white;
+    margin-bottom: 15px;
+    font-size: 16px;
 }
-.footer-columns h4 {
-    color: var(--primary-color);
-    margin-top: 0;
-    font-size: 1.2em;
-}
-.footer-columns ul {
+
+.footer-col ul {
     list-style: none;
-    padding: 0;
-}
-.footer-columns li {
-    margin-bottom: 5px;
-    font-size: 0.9em;
 }
 
-
-.login-btn,  
-.quantity-input button,
-.add-to-cart,
-.add-to-cart-sm,
-.thumbnail-images img,
-.product-card {
-    transition: transform 0.3s ease-in-out, 
-    box-shadow 0.3s ease-in-out;
+.footer-col ul li {
+    margin-bottom: 8px;
 }
 
+.footer-col a {
+    color: #ccc;
+    font-size: 14px;
+    text-decoration: none !important;
+}
+
+.footer-logo .logo-text {
+    font-size: 20px;
+    color: white;
+}
+.footer-logo::before {
+    content: ""; 
+    margin-right: 0;
+}
+
+.footer-info p {
+    font-size: 13px;
+    margin: 10px 0 15px;
+}
+
+.social-links a {
+    font-size: 16px;
+    margin-right: 15px;
+}
+
+.social-links a:hover {
+    color: var(--primary-color);
+    transform: scale(1.2);
+}
+
+.contact-details p {
+    margin-bottom: 10px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+}
+
+.contact-details .fas {
+    margin-right: 10px;
+    color: #ccc;
+    width: 15px;
+}
+
+.copyright {
+    text-align: center;
+    padding-top: 10px;
+    font-size: 12px;
+    color: #777;
+}
 
 
 /* 1. Nút điều chỉnh Số lượng (+ / -) */
@@ -449,13 +489,12 @@ body {
         grid-template-columns: repeat(3, 1fr); 
         gap: 15px;
     }
-    .footer-columns {
+     .footer-grid {
         flex-wrap: wrap; 
         gap: 20px;
     }
-    .footer-columns .col {
+    .footer-col {
         flex-basis: 45%; 
-        text-align: left;
     }
 }
 
@@ -504,6 +543,10 @@ body {
     /* Layout Chính */
     .product-list { 
         grid-template-columns: repeat(2, 1fr); 
+    }
+     .footer-grid {
+        flex-direction: column;
+        text-align: center;
     }
 }
 
@@ -578,15 +621,11 @@ body {
         padding: 8px 10px; 
         font-size: 13px; 
     }
-    .footer-columns { 
+    .footer-grid {
         flex-direction: column; 
-        gap: 15px; 
         text-align: center; 
     }
-    .footer-columns .col { 
+    .footer-col {
         flex-basis: 100%; 
-    }
-    .footer-columns ul { 
-        display: inline-block; 
     }
 }
