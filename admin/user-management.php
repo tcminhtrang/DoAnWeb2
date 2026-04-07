@@ -161,9 +161,7 @@ $result = mysqli_query($conn, $sql);
                             $can_modify = false;
                             
                             if ($current_admin_id != $row['id']) { 
-                                if ($current_admin_id == 1) { 
-                                    $can_modify = true; 
-                                } else if ($row['role'] == 'user') {
+                                if ($row['role'] == 'user') {
                                     $can_modify = true; 
                                 }
                             }

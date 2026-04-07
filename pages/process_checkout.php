@@ -70,30 +70,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
 
     // 3.2 Check Điểm tích lũy
     if ($use_points && $current_points > 0) {
-        $point_to_money = 1000; // ĐÃ XÓA TRUY VẤN SQL, FIX CỨNG TỶ LỆ QUY ĐỔI
-
-        $points_discount_value = $current_points * $point_to_money;
-        
-        // Đảm bảo không giảm quá số tiền còn lại của đơn hàng
+        $points_discount_value = $current_points * POINT_TO_MONEY;
         $price_after_promo = $total_price - $discount_amount;
         
-        if ($points_discount_value > $price_after_promo) {
+        // SỬA LỖI: Dùng >= để xử lý mượt mà khi điểm vừa khít với tiền
+        if ($points_discount_value >= $price_after_promo) {
+            
+            // Giảm toàn bộ phần tiền còn lại (Hóa đơn về 0đ)
             $discount_amount += $price_after_promo;
-            $points_used = ceil($price_after_promo / $point_to_money); // Chỉ trừ số điểm tương ứng
+            
+            // Dùng ceil() là chính xác! Khách dùng 26 điểm để trả cho 25.500đ.
+            // Điều kiện IF phía trên đã đảm bảo khách thừa sức trả số điểm này.
+            $points_used = ceil($price_after_promo / POINT_TO_MONEY); 
+            
         } else {
+            // Khách không đủ điểm để trả hết đơn, dùng sạch số điểm đang có
             $discount_amount += $points_discount_value;
-            $points_used = $current_points; // Dùng hết điểm
+            $points_used = $current_points; 
         }
     }
 
-    // Giá cuối cùng khách phải trả
-    $final_price = $total_price - $discount_amount;
-    if ($final_price < 0) $final_price = 0;
-
-    // 3.3 Tính điểm nhận được sau đơn này (10000đ = 1 điểm)
-    $money_per_point = 10000; // ĐÃ XÓA TRUY VẤN SQL, FIX CỨNG LUẬT TÍCH ĐIỂM
-    
-    $points_earned = floor($final_price / $money_per_point);
+    // 3.3 Tính điểm nhận được sau đơn này
+    $points_earned = floor($final_price / MONEY_PER_POINT);
 
     // 4. LƯU VÀO DATABASE (Transaction)
     mysqli_begin_transaction($conn);

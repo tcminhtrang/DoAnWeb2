@@ -2,7 +2,7 @@
 require_once '../config/database.php';
 
 if (isset($_GET['id'])) {
-    $id = $_GET['id'];
+    $id = (int)$_GET['id'];
     
     // 1. Kiểm tra xem sản phẩm này ĐÃ TỪNG ĐƯỢC NHẬP HÀNG chưa?
     $sql_check = "SELECT COUNT(*) as total FROM import_receipt_details WHERE product_id = $id";

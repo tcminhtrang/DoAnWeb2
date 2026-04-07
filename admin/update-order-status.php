@@ -15,27 +15,53 @@ if (isset($_GET['id']) && isset($_GET['status'])) {
         if ($res_check && mysqli_num_rows($res_check) > 0) {
             $row = mysqli_fetch_assoc($res_check);
             $old_status = $row['status'];
-            $sql_update = "UPDATE orders SET status = '$new_status' WHERE id = $order_id";
-            if(mysqli_query($conn, $sql_update)) {
+            
+            // 1. BẮT ĐẦU TRANSACTION (Bảo vệ tính toàn vẹn dữ liệu)
+            mysqli_begin_transaction($conn);
+            
+            try {
+                // Cập nhật trạng thái đơn hàng trước
+                $sql_update = "UPDATE orders SET status = '$new_status' WHERE id = $order_id";
+                if(!mysqli_query($conn, $sql_update)) {
+                    throw new Exception("Lỗi cập nhật trạng thái đơn hàng.");
+                }
+                
+                // Trừ tồn kho nếu chuyển trạng thái thành 'delivered'
+                if ($old_status !== 'delivered' && $new_status === 'delivered') {
+                    $sql_details = "SELECT product_id, quantity FROM order_details WHERE order_id = $order_id";
+                    $res_details = mysqli_query($conn, $sql_details);
+                    while ($item = mysqli_fetch_assoc($res_details)) {
+                        $p_id = $item['product_id'];
+                        $qty = $item['quantity'];
+                        
+                        if(!mysqli_query($conn, "UPDATE products SET stock = stock - $qty WHERE id = $p_id")) {
+                            throw new Exception("Lỗi khi trừ tồn kho.");
+                        }
+                    }
+                }
+                // Hoàn lại tồn kho nếu đang từ 'delivered' chuyển ngược về trạng thái khác
+                elseif ($old_status === 'delivered' && $new_status !== 'delivered') {
+                    $sql_details = "SELECT product_id, quantity FROM order_details WHERE order_id = $order_id";
+                    $res_details = mysqli_query($conn, $sql_details);
+                    while ($item = mysqli_fetch_assoc($res_details)) {
+                        $p_id = $item['product_id'];
+                        $qty = $item['quantity'];
+                        
+                        if(!mysqli_query($conn, "UPDATE products SET stock = stock + $qty WHERE id = $p_id")) {
+                            throw new Exception("Lỗi khi hoàn lại tồn kho.");
+                        }
+                    }
+                }
+                
+                // 2. TẤT CẢ ĐỀU LỖI LẠC -> CHỐT DỮ LIỆU (COMMIT)
+                mysqli_commit($conn);
                 $_SESSION['success_msg'] = "Cập nhật trạng thái đơn hàng DH" . str_pad($order_id, 3, '0', STR_PAD_LEFT) . " thành công!";
-            }
-            if ($old_status !== 'delivered' && $new_status === 'delivered') {
-                $sql_details = "SELECT product_id, quantity FROM order_details WHERE order_id = $order_id";
-                $res_details = mysqli_query($conn, $sql_details);
-                while ($item = mysqli_fetch_assoc($res_details)) {
-                    $p_id = $item['product_id'];
-                    $qty = $item['quantity'];
-                    mysqli_query($conn, "UPDATE products SET stock = stock - $qty WHERE id = $p_id");
-                }
-            }
-            elseif ($old_status === 'delivered' && $new_status !== 'delivered') {
-                $sql_details = "SELECT product_id, quantity FROM order_details WHERE order_id = $order_id";
-                $res_details = mysqli_query($conn, $sql_details);
-                while ($item = mysqli_fetch_assoc($res_details)) {
-                    $p_id = $item['product_id'];
-                    $qty = $item['quantity'];
-                    mysqli_query($conn, "UPDATE products SET stock = stock + $qty WHERE id = $p_id");
-                }
+                
+            } catch (Exception $e) {
+                // 3. NẾU CÓ BẤT KỲ LỖI GÌ -> HỦY BỎ TẤT CẢ (ROLLBACK)
+                mysqli_rollback($conn);
+                // Có thể gán thêm thông báo lỗi để hiển thị nếu cần
+                $_SESSION['error_msg'] = "Lỗi hệ thống: Không thể cập nhật đơn hàng. " . $e->getMessage();
             }
         }
     }

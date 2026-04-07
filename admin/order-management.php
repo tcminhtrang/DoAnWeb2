@@ -7,36 +7,52 @@ if (isset($_SESSION['success_msg'])) {
     unset($_SESSION['success_msg']);
 }
 
-$where = "1=1";
-
-if (!empty($_GET['fromDate'])) {
-    $from = $_GET['fromDate'];
-    $where .= " AND o.order_date >= '$from 00:00:00'";
-}
-if (!empty($_GET['toDate'])) {
-    $to = $_GET['toDate'];
-    $where .= " AND o.order_date <= '$to 23:59:59'";
-}
-if (!empty($_GET['status']) && $_GET['status'] != 'all') {
-    $status = $_GET['status'];
-    $where .= " AND o.status = '$status'";
-}
-
+// Lấy danh sách phường/xã cho dropdown (Không có tham số user nên truy vấn thường)
 $wardSql = "SELECT DISTINCT ward FROM orders WHERE ward IS NOT NULL AND ward != '' ORDER BY ward ASC";
 $wardResult = mysqli_query($conn, $wardSql);
 
-if (!empty($_GET['ward']) && $_GET['ward'] != 'all') {
-    $ward = mysqli_real_escape_string($conn, $_GET['ward']);
-    $where .= " AND o.ward = '$ward'";
+// XÂY DỰNG SQL ĐỘNG BẰNG PREPARED STATEMENTS
+$conditions = ["1=1"];
+$params = [];
+$types = "";
+
+if (!empty($_GET['fromDate'])) {
+    $conditions[] = "o.order_date >= ?";
+    $params[] = $_GET['fromDate'] . " 00:00:00";
+    $types .= "s";
 }
+if (!empty($_GET['toDate'])) {
+    $conditions[] = "o.order_date <= ?";
+    $params[] = $_GET['toDate'] . " 23:59:59";
+    $types .= "s";
+}
+if (!empty($_GET['status']) && $_GET['status'] != 'all') {
+    $conditions[] = "o.status = ?";
+    $params[] = $_GET['status'];
+    $types .= "s";
+}
+if (!empty($_GET['ward']) && $_GET['ward'] != 'all') {
+    $conditions[] = "o.ward = ?";
+    $params[] = trim($_GET['ward']);
+    $types .= "s";
+}
+
+$where_clause = implode(" AND ", $conditions);
 
 $sql = "SELECT o.*, u.fullname 
         FROM orders o
         JOIN users u ON o.user_id = u.id
-        WHERE $where
+        WHERE $where_clause
         ORDER BY o.ward ASC, o.id DESC";
 
-$result = mysqli_query($conn, $sql);
+$stmt = mysqli_prepare($conn, $sql);
+if (!empty($params)) {
+    mysqli_stmt_bind_param($stmt, $types, ...$params);
+}
+
+// Thực thi và lấy kết quả
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
 ?>
 <!DOCTYPE html>
 <html lang="vi">

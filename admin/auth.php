@@ -2,14 +2,16 @@
 session_start();
 header('Content-Type: application/json');
 
-// 1. Kết nối DB
-$conn = new mysqli("localhost", "root", "", "chickenjoy");
-if ($conn->connect_error) {
+// 1. Kết nối DB bằng file config chung thay vì fix cứng
+require_once '../config/database.php';
+
+// Kiểm tra kết nối từ biến $conn của file database.php
+if (!$conn) {
     echo json_encode(['success' => false, 'message' => 'Lỗi kết nối database']);
     exit;
 }
 
-// 2. Xử lý POST
+// 2. Xử lý POST (phần dưới giữ nguyên)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
@@ -21,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $result = $stmt->get_result();
 
     if ($user = $result->fetch_assoc()) {
-        // Kiểm tra mật khẩu băm (admin123)
+        // Kiểm tra mật khẩu băm
         if (password_verify($password, $user['password'])) {
             $_SESSION['admin_logged_in'] = true;
             $_SESSION['admin_id'] = $user['id'];
@@ -35,4 +37,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $stmt->close();
 }
-$conn->close();
+?>

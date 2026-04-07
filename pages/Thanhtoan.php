@@ -14,9 +14,8 @@ while($row = mysqli_fetch_assoc($res)) {
     $cart_items[] = $row;
 }
 
-$point_to_money = 1000;
 $user_points = $user['points'] ?? 0;
-$max_points_discount = $user_points * $point_to_money;
+$max_points_discount = $user_points * POINT_TO_MONEY;
 ?>
 
 <!DOCTYPE html>
