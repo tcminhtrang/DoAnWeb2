@@ -1,95 +1,51 @@
 <?php
+require_once 'check_admin.php';
 require_once '../config/database.php';
-$sql_products = "SELECT id, product_name, product_code FROM products WHERE status = 'active'";
-$result_products = $conn->query($sql_products);
-$products_list = [];
-while($p = $result_products->fetch_assoc()) {
-    $products_list[] = $p;
-}
+
+// Lấy danh sách danh mục hiển thị ra dropdown
+$sql_categories = "SELECT id, category_name FROM categories WHERE status = 'active'";
+$result_categories = $conn->query($sql_categories);
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $product_code = trim($_POST['product-code']);
+    $product_name = trim($_POST['product-name']);
+    $category_id  = (int)$_POST['product-category'];
+    $unit         = trim($_POST['product-unit']);
+    $stock        = (int)$_POST['product-stock'];
+    $cost         = (float)$_POST['product-cost'];
+    $profit       = (float)$_POST['product-profit'] / 100;
     
-    if (!isset($_POST['product_id']) || empty(array_filter($_POST['product_id']))) {
-        echo "<script>alert('Lỗi: Phiếu nhập trống hoặc sản phẩm không hợp lệ!'); window.location.href='import-add.php';</script>";
-        exit();
+    $image        = trim($_POST['product-image']);
+    if (empty($image)) $image = 'default.jpg';
+    
+    $status       = trim($_POST['product-status']);
+    $desc         = trim($_POST['product-desc']);
+    
+    // Tự động tính giá bán
+    $price        = round($cost * (1 + $profit));
+
+    // Kiểm tra mã trùng bằng Prepared Statement (An toàn tuyệt đối)
+    $stmt_check = $conn->prepare("SELECT id FROM products WHERE product_code = ?");
+    $stmt_check->bind_param("s", $product_code);
+    $stmt_check->execute();
+    $stmt_check->store_result();
+
+    if ($stmt_check->num_rows > 0) {
+        $error_msg = "Mã sản phẩm '$product_code' đã tồn tại!";
+    } else {
+        // Thêm mới sản phẩm bằng Prepared Statement
+        $stmt_insert = $conn->prepare("INSERT INTO products (product_code, category_id, product_name, description, unit, import_price, profit_rate, price, stock, image, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt_insert->bind_param("sisssddidss", $product_code, $category_id, $product_name, $desc, $unit, $cost, $profit, $price, $stock, $image, $status);
+        
+        if ($stmt_insert->execute()) {
+            header("Location: list.php");
+            exit();
+        } else {
+            $error_msg = "Lỗi CSDL: Không thể thêm sản phẩm.";
+        }
+        $stmt_insert->close();
     }
-
-    $receipt_code = mysqli_real_escape_string($conn, $_POST['receipt_code']);
-    $import_date = mysqli_real_escape_string($conn, $_POST['import_date']);
-    $status = mysqli_real_escape_string($conn, $_POST['status']);
-    
-    // BẮT ĐẦU TRANSACTION
-    mysqli_begin_transaction($conn);
-    
-    try {
-        $sql_receipt = "INSERT INTO import_receipts (receipt_code, import_date, status, total_amount) VALUES ('$receipt_code', '$import_date', '$status', 0)";
-        
-        if (!$conn->query($sql_receipt)) {
-            throw new Exception("Không thể tạo phiếu nhập.");
-        }
-        
-        $receipt_id = $conn->insert_id;
-        $total_all = 0;
-        
-        $product_ids = $_POST['product_id'];
-        $quantities = $_POST['quantity'];
-        $prices = $_POST['import_price'];
-
-        for ($i = 0; $i < count($product_ids); $i++) {
-            $p_id = (int)$product_ids[$i];
-            $qty = (int)$quantities[$i];
-            $price = (float)$prices[$i];
-            
-            if (empty($p_id) || $qty <= 0 || $price < 1000) continue;
-
-            $subtotal = $qty * $price;
-            $total_all += $subtotal;
-            
-            $sql_detail = "INSERT INTO import_receipt_details (receipt_id, product_id, quantity, import_price) VALUES ($receipt_id, $p_id, $qty, $price)";
-            if (!$conn->query($sql_detail)) {
-                throw new Exception("Lỗi thêm chi tiết sản phẩm.");
-            }
-            
-            // Xử lý tính toán giá vốn khi phiếu đã "hoàn thành"
-            if ($status == 'completed') {
-                $res_prod = $conn->query("SELECT stock, import_price, profit_rate FROM products WHERE id = $p_id");
-                if ($res_prod->num_rows > 0) {
-                    $prod = $res_prod->fetch_assoc();
-                    
-                    $ton_hien_tai = (int)$prod['stock'];
-                    $gia_von_hien_tai = (float)$prod['import_price'];
-                    $ty_le_loi_nhuan = (float)$prod['profit_rate'];
-                    
-                    $tu_so = ($ton_hien_tai * $gia_von_hien_tai) + ($qty * $price);
-                    $mau_so = $ton_hien_tai + $qty;
-                    $gia_von_moi = $mau_so > 0 ? round($tu_so / $mau_so) : 0; 
-                    $gia_ban_moi = round($gia_von_moi * (1 + $ty_le_loi_nhuan));
-                    $ton_moi = $ton_hien_tai + $qty;
-                    
-                    $sql_update_prod = "UPDATE products SET import_price = $gia_von_moi, price = $gia_ban_moi, stock = $ton_moi WHERE id = $p_id";
-                    if (!$conn->query($sql_update_prod)) {
-                        throw new Exception("Lỗi cập nhật kho sản phẩm.");
-                    }
-                }
-            }
-        }
-        
-        $sql_update_receipt = "UPDATE import_receipts SET total_amount = $total_all WHERE id = $receipt_id";
-        if (!$conn->query($sql_update_receipt)) {
-            throw new Exception("Lỗi cập nhật tổng tiền.");
-        }
-        
-        // HOÀN TẤT GIAO DỊCH (LƯU VÀO DB)
-        mysqli_commit($conn);
-        header("Location: import.php"); 
-        exit();
-
-    } catch (Exception $e) {
-        // CÓ LỖI XẢY RA -> HỦY BỎ TOÀN BỘ CÁC BƯỚC ĐÃ LÀM Ở TRÊN
-        mysqli_rollback($conn);
-        echo "<script>alert('Lỗi hệ thống: " . addslashes($e->getMessage()) . "'); window.history.back();</script>";
-        exit();
-    }
+    $stmt_check->close();
 }
 ?>
 <!DOCTYPE html>

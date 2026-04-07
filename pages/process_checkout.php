@@ -21,9 +21,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
         $final_addr = $u['address'];
         $current_points = $u['points'] ?? 0;
     } else {
-        $final_name = mysqli_real_escape_string($conn, $_POST['new_name']);
-        $final_phone = mysqli_real_escape_string($conn, $_POST['new_phone']);
-        $full_address = $_POST['specific_address'] . ", " . $_POST['district'] . ", " . $_POST['city'];
+        $final_name = mysqli_real_escape_string($conn, $_POST['new_name'] ?? '');
+        $final_phone = mysqli_real_escape_string($conn, $_POST['new_phone'] ?? '');
+        
+        $spec_addr = $_POST['specific_address'] ?? '';
+        $dist = $_POST['district'] ?? '';
+        $city = $_POST['city'] ?? '';
+        
+        $full_address = trim($spec_addr . ", " . $dist . ", " . $city, ", ");
         $final_addr = mysqli_real_escape_string($conn, $full_address);
         
         $u_res = mysqli_query($conn, "SELECT points FROM users WHERE id = $user_id");
@@ -34,8 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
         die("Vui lòng nhập đầy đủ thông tin giao hàng!");
     }
 
-    // 2. LẤY GIỎ HÀNG VÀ TÍNH TỔNG TIỀN BAN ĐẦU
-    $cart_res = mysqli_query($conn, "SELECT c.quantity, p.price, p.id FROM cart c JOIN products p ON c.product_id = p.id WHERE c.user_id = $user_id");
+    // 2. LẤY GIỎ HÀNG (Lấy thêm tên sản phẩm để lỡ lỗi còn báo cho khách biết món nào)
+    $cart_res = mysqli_query($conn, "SELECT c.quantity, p.price, p.id, p.product_name FROM cart c JOIN products p ON c.product_id = p.id WHERE c.user_id = $user_id");
     $total_price = 0;
     $cart_items = [];
     
@@ -53,10 +58,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
     $discount_amount = 0;
     $points_used = 0;
 
-    // 3.1 Check Mã khuyến mãi
     if (!empty($promo_code)) {
         $date_now = date('Y-m-d');
-        // Kiểm tra mã có tồn tại, active và còn hạn không
         $promo_sql = "SELECT discount_percent FROM promotions WHERE code = '$promo_code' AND status = 'active' AND start_date <= '$date_now' AND end_date >= '$date_now'";
         $promo_query = mysqli_query($conn, $promo_sql);
         
@@ -64,40 +67,48 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
             $promo_data = mysqli_fetch_assoc($promo_query);
             $discount_amount += $total_price * ($promo_data['discount_percent'] / 100);
         } else {
-            $promo_code = NULL; // Reset nếu mã sai hoặc hết hạn
+            $promo_code = NULL; 
         }
     }
 
-    // 3.2 Check Điểm tích lũy
     if ($use_points && $current_points > 0) {
         $points_discount_value = $current_points * POINT_TO_MONEY;
         $price_after_promo = $total_price - $discount_amount;
         
-        // SỬA LỖI: Dùng >= để xử lý mượt mà khi điểm vừa khít với tiền
         if ($points_discount_value >= $price_after_promo) {
-            
-            // Giảm toàn bộ phần tiền còn lại (Hóa đơn về 0đ)
             $discount_amount += $price_after_promo;
-            
-            // Dùng ceil() là chính xác! Khách dùng 26 điểm để trả cho 25.500đ.
-            // Điều kiện IF phía trên đã đảm bảo khách thừa sức trả số điểm này.
             $points_used = ceil($price_after_promo / POINT_TO_MONEY); 
-            
         } else {
-            // Khách không đủ điểm để trả hết đơn, dùng sạch số điểm đang có
             $discount_amount += $points_discount_value;
             $points_used = $current_points; 
         }
     }
 
-    // 3.3 Tính điểm nhận được sau đơn này
+    $final_price = max(0, $total_price - $discount_amount);
     $points_earned = floor($final_price / MONEY_PER_POINT);
 
     // 4. LƯU VÀO DATABASE (Transaction)
     mysqli_begin_transaction($conn);
 
     try {
+        // [CẬP NHẬT QUAN TRỌNG]: Kiểm tra tồn kho từng món trước khi tạo đơn
+        foreach ($cart_items as $item) {
+            $p_id = $item['id'];
+            $qty_needed = $item['quantity'];
+            $p_name = $item['product_name'];
+            
+            // Truy vấn lấy số lượng tồn kho hiện tại
+            $stock_query = mysqli_query($conn, "SELECT stock FROM products WHERE id = $p_id");
+            $stock_data = mysqli_fetch_assoc($stock_query);
+            
+            // Nếu khách mua nhiều hơn số lượng kho đang có -> Ném lỗi HỦY toàn bộ giao dịch
+            if ($stock_data['stock'] < $qty_needed) {
+                throw new Exception("Sản phẩm '$p_name' không đủ số lượng (Chỉ còn {$stock_data['stock']} phần). Vui lòng cập nhật lại giỏ hàng!");
+            }
+        }
+
         $promo_val = $promo_code ? "'$promo_code'" : "NULL";
+        
         $sql_order = "INSERT INTO orders (user_id, receiver_name, total_price, discount_amount, promo_code, status, payment_method, address, phone, order_note) 
                       VALUES ($user_id, '$final_name', $final_price, $discount_amount, $promo_val, 'pending', '$payment_method', '$final_addr', '$final_phone', '$order_note')";
         
@@ -110,33 +121,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
             $qty = $item['quantity']; 
             $price = $item['price'];
             
-            // 1. Chỉ lưu vào bảng order_details 
             $sql_detail = "INSERT INTO order_details (order_id, product_id, quantity, price_at_purchase) 
                            VALUES ($order_id, $p_id, $qty, $price)";
             if (!mysqli_query($conn, $sql_detail)) throw new Exception(mysqli_error($conn));
         }
 
-        // C. Cập nhật lại số điểm của User (Trừ điểm đã dùng + Cộng điểm vừa kiếm được)
         $sql_update_points = "UPDATE users SET points = points - $points_used + $points_earned WHERE id = $user_id";
         if (!mysqli_query($conn, $sql_update_points)) throw new Exception(mysqli_error($conn));
-        // D1. Ghi nhận lịch sử TRỪ ĐIỂM (nếu khách có dùng điểm)
+        
         if ($points_used > 0) {
             $reason_use = "Dùng điểm thanh toán đơn hàng #" . $order_id;
-            // Điểm trừ thì lưu số âm (ví dụ: -50)
             $sql_history_use = "INSERT INTO point (user_id, order_id, points_change, reason) 
                                 VALUES ($user_id, $order_id, -$points_used, '$reason_use')";
             if (!mysqli_query($conn, $sql_history_use)) throw new Exception(mysqli_error($conn));
         }
 
-        // D2. Ghi nhận lịch sử CỘNG ĐIỂM (từ giá trị đơn hàng)
         if ($points_earned > 0) {
             $reason_earn = "Tích điểm từ đơn hàng #" . $order_id;
-            // Điểm cộng thì lưu số dương
             $sql_history_earn = "INSERT INTO point (user_id, order_id, points_change, reason) 
                                  VALUES ($user_id, $order_id, $points_earned, '$reason_earn')";
             if (!mysqli_query($conn, $sql_history_earn)) throw new Exception(mysqli_error($conn));
         }
-        // D. Xóa giỏ hàng
+        
         mysqli_query($conn, "DELETE FROM cart WHERE user_id = $user_id");
 
         mysqli_commit($conn);
@@ -144,8 +150,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
         exit();
 
     } catch (Exception $e) {
+        // [NÂNG CẤP]: Hiển thị popup báo lỗi rõ ràng và đưa về lại Giỏ Hàng
         mysqli_rollback($conn);
-        echo "Lỗi hệ thống: " . $e->getMessage();
+        $error_message = addslashes($e->getMessage());
+        echo "<script>
+                alert('LỖI ĐẶT HÀNG: $error_message');
+                window.location.href = 'Giohang.php';
+              </script>";
+        exit();
     }
 
 } else {

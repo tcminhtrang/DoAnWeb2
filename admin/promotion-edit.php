@@ -1,8 +1,9 @@
 <?php
+require_once 'check_admin.php';
 require_once '../config/database.php';
 
 if (isset($_GET['id'])) {
-    $id = (int)$_GET['id'];
+    $id = (int)$_GET['id']; // Ép kiểu an toàn
     $sql_get = "SELECT * FROM promotions WHERE id = $id";
     $result = $conn->query($sql_get);
     
@@ -23,9 +24,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $code = strtoupper(trim($_POST['promo-code']));
     $name = trim($_POST['promo-name']);
     $discount = (int)$_POST['promo-discount'];
-    $start_date = $_POST['promo-start'];
-    $end_date = $_POST['promo-end'];
-    $status = $_POST['promo-status'];
+    $start_date = trim($_POST['promo-start']);
+    $end_date = trim($_POST['promo-end']);
+    $status = trim($_POST['promo-status']);
+
+    // Cập nhật lại mảng $promo để hiển thị lại form nếu có lỗi
     $promo['code'] = $code;
     $promo['name'] = $name;
     $promo['discount_percent'] = $discount;
@@ -33,29 +36,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $promo['end_date'] = $end_date;
     $promo['status'] = $status;
 
-    $sql_check = "SELECT id FROM promotions WHERE code = '$code' AND id != $id";
-    $result_check = $conn->query($sql_check);
-
-    if ($result_check->num_rows > 0) {
-        $error_msg = "Lỗi: Mã khuyến mãi '$code' đã bị trùng với chương trình khác!";
-    } elseif ($start_date > $end_date) {
+    // Kiểm tra logic
+    if ($start_date > $end_date) {
         $error_msg = "Lỗi: Ngày bắt đầu không được lớn hơn ngày kết thúc!";
     } else {
-        $sql_update = "UPDATE promotions SET 
-                        code = '$code', 
-                        name = '$name', 
-                        discount_percent = $discount, 
-                        start_date = '$start_date', 
-                        end_date = '$end_date', 
-                        status = '$status' 
-                       WHERE id = $id";
-    
-        if ($conn->query($sql_update) === TRUE) {
-            header("Location: promotion.php"); 
-            exit();
+        // Dùng Prepared Statement để Update (Chú ý không cho sửa trùng mã code với ID khác)
+        $stmt_check = $conn->prepare("SELECT id FROM promotions WHERE code = ? AND id != ?");
+        $stmt_check->bind_param("si", $code, $id);
+        $stmt_check->execute();
+        $stmt_check->store_result();
+
+        if ($stmt_check->num_rows > 0) {
+            $error_msg = "Lỗi: Mã khuyến mãi '$code' đã được sử dụng cho một chương trình khác!";
         } else {
-            $error_msg = "Lỗi CSDL: Không thể cập nhật khuyến mãi!";
+            $stmt_update = $conn->prepare("UPDATE promotions SET code = ?, name = ?, discount_percent = ?, start_date = ?, end_date = ?, status = ? WHERE id = ?");
+            $stmt_update->bind_param("ssisssi", $code, $name, $discount, $start_date, $end_date, $status, $id);
+
+            if ($stmt_update->execute()) {
+                header("Location: promotion.php");
+                exit();
+            } else {
+                $error_msg = "Lỗi CSDL: Không thể cập nhật khuyến mãi.";
+            }
+            $stmt_update->close();
         }
+        $stmt_check->close();
     }
 }
 ?>

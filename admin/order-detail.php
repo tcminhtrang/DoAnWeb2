@@ -1,4 +1,5 @@
 <?php
+require_once 'check_admin.php';
 require_once '../config/database.php';
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $sql = "SELECT o.*, u.fullname 

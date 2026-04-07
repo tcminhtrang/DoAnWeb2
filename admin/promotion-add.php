@@ -1,4 +1,5 @@
 <?php
+require_once 'check_admin.php';
 require_once '../config/database.php';
 
 $error_msg = "";
@@ -7,27 +8,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $code = strtoupper(trim($_POST['promo-code'])); 
     $name = trim($_POST['promo-name']);
     $discount = (int)$_POST['promo-discount'];
-    $start_date = $_POST['promo-start'];
-    $end_date = $_POST['promo-end'];
-    $status = $_POST['promo-status'];
+    $start_date = trim($_POST['promo-start']);
+    $end_date = trim($_POST['promo-end']);
+    $status = trim($_POST['promo-status']);
 
-    $sql_check = "SELECT id FROM promotions WHERE code = '$code'";
-    $result_check = $conn->query($sql_check);
-
-    if ($result_check->num_rows > 0) {
-        $error_msg = "Lỗi: Mã khuyến mãi '$code' đã tồn tại!";
+    // Kiểm tra logic ngày tháng từ Server
+    if (empty($start_date) || empty($end_date)) {
+        $error_msg = "Vui lòng nhập đầy đủ ngày bắt đầu và kết thúc!";
     } elseif ($start_date > $end_date) {
         $error_msg = "Lỗi: Ngày bắt đầu không được lớn hơn ngày kết thúc!";
     } else {
-        $sql_insert = "INSERT INTO promotions (code, name, discount_percent, start_date, end_date, status) 
-                       VALUES ('$code', '$name', $discount, '$start_date', '$end_date', '$status')";
-    
-        if ($conn->query($sql_insert) === TRUE) {
-            header("Location: promotion.php"); 
-            exit();
+        // Dùng Prepared Statement để kiểm tra mã trùng
+        $stmt_check = $conn->prepare("SELECT id FROM promotions WHERE code = ?");
+        $stmt_check->bind_param("s", $code);
+        $stmt_check->execute();
+        $stmt_check->store_result();
+
+        if ($stmt_check->num_rows > 0) {
+            $error_msg = "Lỗi: Mã khuyến mãi '$code' đã tồn tại!";
         } else {
-            $error_msg = "Lỗi CSDL: Không thể thêm khuyến mãi!";
+            // Dùng Prepared Statement để Insert an toàn tuyệt đối
+            $stmt_insert = $conn->prepare("INSERT INTO promotions (code, name, discount_percent, start_date, end_date, status) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt_insert->bind_param("ssisss", $code, $name, $discount, $start_date, $end_date, $status);
+        
+            if ($stmt_insert->execute()) {
+                header("Location: promotion.php"); 
+                exit();
+            } else {
+                $error_msg = "Lỗi CSDL: Không thể thêm mã khuyến mãi.";
+            }
+            $stmt_insert->close();
         }
+        $stmt_check->close();
     }
 }
 ?>

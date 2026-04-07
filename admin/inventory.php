@@ -1,4 +1,5 @@
 <?php
+require_once 'check_admin.php';
 require_once '../config/database.php';
 $search = isset($_GET['search']) ? $conn->real_escape_string($_GET['search']) : '';
 $low_stock_threshold = isset($_GET['threshold']) ? intval($_GET['threshold']) : 10;

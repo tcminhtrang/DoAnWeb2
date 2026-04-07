@@ -1,4 +1,5 @@
 <?php
+require_once 'check_admin.php';
 require_once '../config/database.php';
 
 $all_products = $conn->query("SELECT id, product_name FROM products WHERE status = 'active'");

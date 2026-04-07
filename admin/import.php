@@ -1,15 +1,16 @@
 <?php
-  require_once '../config/database.php';
-  $search = "";
-  if (isset($_GET['search']) && $_GET['search'] != '') {
-      $search = $_GET['search'];
-      $search_escaped = $conn->real_escape_string($search);
-      $sql = "SELECT * FROM import_receipts WHERE receipt_code LIKE '%$search_escaped%' ORDER BY id DESC";
-  } else {
-      $sql = "SELECT * FROM import_receipts ORDER BY id DESC";
-  }
-  
-  $result = $conn->query($sql);
+require_once 'check_admin.php';
+require_once '../config/database.php';
+$search = "";
+if (isset($_GET['search']) && $_GET['search'] != '') {
+    $search = $_GET['search'];
+    $search_escaped = $conn->real_escape_string($search);
+    $sql = "SELECT * FROM import_receipts WHERE receipt_code LIKE '%$search_escaped%' ORDER BY id DESC";
+} else {
+    $sql = "SELECT * FROM import_receipts ORDER BY id DESC";
+}
+
+$result = $conn->query($sql);
 ?>
 <!DOCTYPE html>
 <html lang="vi">

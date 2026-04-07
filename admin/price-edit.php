@@ -1,8 +1,10 @@
 <?php
+require_once 'check_admin.php';
 require_once '../config/database.php';
 
+// 1. Lấy thông tin sản phẩm
 if (isset($_GET['id'])) {
-    $id = $_GET['id'];
+    $id = (int)$_GET['id']; // FIX BUG PHÁT SINH: Ép kiểu (int) chống SQL Injection
     $sql_get = "SELECT * FROM products WHERE id = $id";
     $result = $conn->query($sql_get);
     if ($result->num_rows > 0) {
@@ -16,20 +18,27 @@ if (isset($_GET['id'])) {
     exit();
 }
 
+// 2. Xử lý khi Submit Form
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $loi_nhuan_nhap_vao = $_POST['profit_rate'];
-    
+    // Ép kiểu float để an toàn tuyệt đối
+    $loi_nhuan_nhap_vao = (float)$_POST['profit_rate'];
     $loi_nhuan_luu_db = $loi_nhuan_nhap_vao / 100; 
-    $gia_ban_moi = $_POST['price'];
+    
+    // FIX BUG NGHIÊM TRỌNG: Tự tính giá bán tại Server (Bỏ qua $_POST['price'])
+    $gia_von = (float)$product['import_price'];
+    $gia_ban_moi = round($gia_von * (1 + $loi_nhuan_luu_db));
 
-    $sql_update = "UPDATE products SET profit_rate = $loi_nhuan_luu_db, price = $gia_ban_moi WHERE id = $id";
+    // Dùng Prepared Statement để update
+    $stmt_update = $conn->prepare("UPDATE products SET profit_rate = ?, price = ? WHERE id = ?");
+    $stmt_update->bind_param("ddi", $loi_nhuan_luu_db, $gia_ban_moi, $id);
 
-    if ($conn->query($sql_update) === TRUE) {
+    if ($stmt_update->execute()) {
         header("Location: price.php");
         exit();
     } else {
-        $error_msg = "Lỗi cập nhật giá!";
+        $error_msg = "Lỗi cập nhật giá: " . $conn->error;
     }
+    $stmt_update->close();
 }
 ?>
 <!DOCTYPE html>

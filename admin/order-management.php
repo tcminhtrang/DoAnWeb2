@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once 'check_admin.php';
 require_once '../config/database.php';
 $success_msg = "";
 if (isset($_SESSION['success_msg'])) {
@@ -39,13 +39,22 @@ if (!empty($_GET['ward']) && $_GET['ward'] != 'all') {
 
 $where_clause = implode(" AND ", $conditions);
 
+// Mặc định luôn ưu tiên đơn mới nhất (id DESC) để admin dễ làm việc
+$order_by = "o.id DESC"; 
+
+// Nếu người dùng chủ động chọn sắp xếp theo phường
+if (isset($_GET['sort']) && $_GET['sort'] == 'ward') {
+    $order_by = "o.ward ASC, o.id DESC";
+}
+
 $sql = "SELECT o.*, u.fullname 
         FROM orders o
         JOIN users u ON o.user_id = u.id
         WHERE $where_clause
-        ORDER BY o.ward ASC, o.id DESC";
+        ORDER BY $order_by";
 
 $stmt = mysqli_prepare($conn, $sql);
+
 if (!empty($params)) {
     mysqli_stmt_bind_param($stmt, $types, ...$params);
 }
@@ -79,48 +88,58 @@ $result = mysqli_stmt_get_result($stmt);
             <p style="color: #28a745; font-weight: bold; margin-bottom: 15px;">✓ <?= $success_msg ?></p>
         <?php endif; ?>
 
-        <div class="filters">
-            <div class="filter-group">
-                <div class="filter">
-                    <label>Từ ngày:</label>
-                    <input type="date" id="fromDate" value="<?= isset($_GET['fromDate']) ? htmlspecialchars($_GET['fromDate']) : '' ?>" />
+        <div class="filter-group" style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 30px;">  
+            <div class="filter">
+                <label style="font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 5px;">Khoảng thời gian:</label>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <input type="date" id="fromDate" value="<?php echo $_GET['fromDate'] ?? ''; ?>" class="date-input" style="padding: 5px 8px; font-size: 13px; width: 125px; border: 1px solid #ccc; border-radius: 4px; outline: none; color: #333;">
+                    <span style="font-size: 13px; color: #777;">đến</span>
+                    <input type="date" id="toDate" value="<?php echo $_GET['toDate'] ?? ''; ?>" class="date-input" style="padding: 5px 8px; font-size: 13px; width: 125px; border: 1px solid #ccc; border-radius: 4px; outline: none; color: #333;">
                 </div>
-                <div class="filter">
-                    <label>Đến ngày:</label>
-                    <input type="date" id="toDate" value="<?= isset($_GET['toDate']) ? htmlspecialchars($_GET['toDate']) : '' ?>" />
-                </div>
-                <div class="filter">
-                    <label>Tình trạng:</label>
-                    <select id="statusFilter">
-                        <?php $currentStatus = isset($_GET['status']) ? $_GET['status'] : 'all'; ?>
-                        <option value="all" <?= $currentStatus == 'all' ? 'selected' : '' ?>>Tất cả</option>
-                        <option value="pending" <?= $currentStatus == 'pending' ? 'selected' : '' ?>>Chưa xử lý</option>
-                        <option value="confirmed" <?= $currentStatus == 'confirmed' ? 'selected' : '' ?>>Đã xác nhận</option>
-                        <option value="delivered" <?= $currentStatus == 'delivered' ? 'selected' : '' ?>>Đã giao</option>
-                        <option value="cancelled" <?= $currentStatus == 'cancelled' ? 'selected' : '' ?>>Đã hủy</option>
-                    </select>
-                </div>
-                
-                <div class="filter">
-                    <label>Khu vực:</label>
-                    <select id="wardFilter">
-                        <?php $currentWard = isset($_GET['ward']) ? $_GET['ward'] : 'all'; ?>
-                        <option value="all" <?= $currentWard == 'all' ? 'selected' : '' ?>>Tất cả các phường</option>
-                        <?php 
-                        if(isset($wardResult) && mysqli_num_rows($wardResult) > 0) {
-                            while ($w = mysqli_fetch_assoc($wardResult)) {
-                                $selected = ($currentWard == $w['ward']) ? 'selected' : '';
-                                echo "<option value='" . htmlspecialchars($w['ward']) . "' $selected>" . htmlspecialchars($w['ward']) . "</option>";
-                            }
+            </div>
+            
+            <div class="filter">
+                <label style="font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 5px;">Tình trạng:</label>
+                <select id="statusFilter" style="padding: 5px 8px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px; outline: none; color: #333; cursor: pointer;">
+                    <?php $currentStatus = isset($_GET['status']) ? $_GET['status'] : 'all'; ?>
+                    <option value="all" <?= $currentStatus == 'all' ? 'selected' : '' ?>>Tất cả</option>
+                    <option value="pending" <?= $currentStatus == 'pending' ? 'selected' : '' ?>>Chưa xử lý</option>
+                    <option value="confirmed" <?= $currentStatus == 'confirmed' ? 'selected' : '' ?>>Đã xác nhận</option>
+                    <option value="delivered" <?= $currentStatus == 'delivered' ? 'selected' : '' ?>>Đã giao</option>
+                    <option value="cancelled" <?= $currentStatus == 'cancelled' ? 'selected' : '' ?>>Đã hủy</option>
+                </select>
+            </div>
+            
+            <div class="filter">
+                <label style="font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 5px;">Khu vực:</label>
+                <select id="wardFilter" style="padding: 5px 8px; font-size: 13px; max-width: 140px; border: 1px solid #ccc; border-radius: 4px; outline: none; color: #333; cursor: pointer;">
+                    <?php $currentWard = isset($_GET['ward']) ? $_GET['ward'] : 'all'; ?>
+                    <option value="all" <?= $currentWard == 'all' ? 'selected' : '' ?>>Tất cả phường</option>
+                    <?php 
+                    if(isset($wardResult) && mysqli_num_rows($wardResult) > 0) {
+                        while ($w = mysqli_fetch_assoc($wardResult)) {
+                            $selected = ($currentWard == $w['ward']) ? 'selected' : '';
+                            echo "<option value='" . htmlspecialchars($w['ward']) . "' $selected>" . htmlspecialchars($w['ward']) . "</option>";
                         }
-                        ?>
-                    </select>
-                </div>
+                    }
+                    ?>
+                </select>
             </div>
-            <div class="filter" style="display: flex; align-items: flex-end;">
-                <button id="filterBtn" class="btn-primary" style="height: 38px;">Lọc</button>
+            
+            <div class="filter">
+                <label style="font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 5px;">Sắp xếp theo:</label>
+                <select id="sortFilter" style="padding: 5px 8px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px; outline: none; color: #333; cursor: pointer;">
+                    <?php $currentSort = isset($_GET['sort']) ? $_GET['sort'] : 'newest'; ?>
+                    <option value="newest" <?= $currentSort == 'newest' ? 'selected' : '' ?>>Mới nhất</option>
+                    <option value="ward" <?= $currentSort == 'ward' ? 'selected' : '' ?>>Phường </option>
+                </select>
             </div>
+            <button id="filterBtn" class="btn-primary" style="padding: 5px 20px; font-size: 13px; font-weight: bold; height: 30px; border-radius: 4px; border: none; cursor: pointer;  color: white; transition: 0.2s;">
+                <i class="fas fa-filter" style="margin-right: 5px;"></i> Lọc
+            </button>
         </div>
+        
+    
 
         <section class="table-section">
             <table class="data-table">
@@ -128,7 +147,7 @@ $result = mysqli_stmt_get_result($stmt);
                     <tr>
                         <th>Mã đơn</th>
                         <th>Khách hàng</th>
-                        <th>Khu vực (Phường)</th> <th>Ngày đặt</th>
+                        <th>Khu vực</th> <th>Ngày đặt</th>
                         <th>Tổng tiền</th>
                         <th>Tình trạng</th>
                         <th>Thao tác</th>
@@ -222,9 +241,40 @@ $result = mysqli_stmt_get_result($stmt);
             let from = document.getElementById("fromDate").value;
             let to = document.getElementById("toDate").value;
             let status = document.getElementById("statusFilter").value;
-            let ward = document.getElementById("wardFilter").value; // Lấy giá trị phường
+            let ward = document.getElementById("wardFilter").value; 
+            let sort = document.getElementById("sortFilter").value;
+            window.location.href = `order-management.php?fromDate=${from}&toDate=${to}&status=${status}&ward=${ward}&sort=${sort}`;
+        });
+        const fromInput = document.getElementById("fromDate");
+        const toInput = document.getElementById("toDate");
 
-            window.location.href = `order-management.php?fromDate=${from}&toDate=${to}&status=${status}&ward=${ward}`;
+        // 1. CHỐT CHẶN MỀM: Tự động giới hạn ngày chọn trên Lịch
+        fromInput.addEventListener("change", function() {
+            toInput.min = this.value; // "Đến ngày" không được nhỏ hơn "Từ ngày"
+        });
+
+        toInput.addEventListener("change", function() {
+            fromInput.max = this.value; // "Từ ngày" không được lớn hơn "Đến ngày"
+        });
+
+        // 2. XỬ LÝ KHI BẤM NÚT LỌC
+        document.getElementById("filterBtn").addEventListener("click", () => {
+            let from = fromInput.value;
+            let to = toInput.value;
+
+            // CHỐT CHẶN CỨNG: Hiển thị cảnh báo nếu vẫn cố tình nhập ngược
+            if (from !== "" && to !== "") {
+                if (from > to) {
+                    alert("CẢNH BÁO: 'Từ ngày' không thể lớn hơn 'Đến ngày'! Vui lòng chọn lại khoảng thời gian.");
+                    return; // Lệnh return này sẽ ngắt luồng, chặn không cho reload trang
+                }
+            }
+
+            let status = document.getElementById("statusFilter").value;
+            let ward = document.getElementById("wardFilter").value; 
+            let sort = document.getElementById("sortFilter").value;
+
+            window.location.href = `order-management.php?fromDate=${from}&toDate=${to}&status=${status}&ward=${ward}&sort=${sort}`;
         });
     </script>
 

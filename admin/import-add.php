@@ -1,4 +1,5 @@
 <?php
+require_once 'check_admin.php';
 require_once '../config/database.php';
 $sql_products = "SELECT id, product_name, product_code FROM products WHERE status = 'active'";
 $result_products = $conn->query($sql_products);
@@ -62,6 +63,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 }
+$sql_get_code = "SELECT receipt_code FROM import_receipts ORDER BY id DESC LIMIT 1";
+$result_code = $conn->query($sql_get_code);
+
+if ($result_code && $result_code->num_rows > 0) {
+    $last_code = $result_code->fetch_assoc()['receipt_code'];
+    $last_number = (int)substr($last_code, 2);
+    $next_code = 'PN' . str_pad($last_number + 1, 3, '0', STR_PAD_LEFT);
+} else {
+    $next_code = 'PN001';
+}
+?>
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -81,7 +93,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       <form action="" method="POST" id="import-form" novalidate> <div style="display: flex; gap: 20px; margin-bottom: 20px;">
             <div class="form-group" style="flex: 1;">
                 <label>Mã phiếu:</label>
-                <input type="text" name="receipt_code" value="PN<?php echo time(); ?>" readonly style="background: #eee;">
+                <input type="text" name="receipt_code" value="<?php echo $next_code; ?>" readonly style="background: #eee; font-weight: bold; color: #ca2510;">
             </div>
             <div class="form-group" style="flex: 1;">
                 <label>Ngày nhập:</label>

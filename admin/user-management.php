@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once 'check_admin.php';
 require_once '../config/database.php';
 $current_admin_id = isset($_SESSION['admin_id']) ? $_SESSION['admin_id'] : 1; 
 $error_msg = "";

@@ -1,5 +1,5 @@
 <?php
-require_once 'check_admin.php'; 
+require_once 'check_admin.php';
 require_once '../config/database.php';
 
 $error_msg = "";
