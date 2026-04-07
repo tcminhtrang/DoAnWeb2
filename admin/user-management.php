@@ -1,10 +1,12 @@
 <?php
 require_once 'check_admin.php';
 require_once '../config/database.php';
+
 $current_admin_id = isset($_SESSION['admin_id']) ? $_SESSION['admin_id'] : 1; 
 $error_msg = "";
 $success_msg = "";
 $show_modal = false;
+
 if (isset($_SESSION['success_msg'])) {
     $success_msg = $_SESSION['success_msg'];
     unset($_SESSION['success_msg']); 
@@ -16,53 +18,61 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_user'])) {
     $raw_password = $_POST['password'];
     $role = isset($_POST['role']) ? $_POST['role'] : ''; 
     $address = "Chưa cập nhật";
-    $stmt_check = $conn->prepare("SELECT email, phone FROM users WHERE email = ? OR phone = ? LIMIT 1");
-    $stmt_check->bind_param("ss", $email, $phone);
-    $stmt_check->execute();
-    $stmt_check->store_result();
-    if ($stmt_check->num_rows > 0) {
-        $stmt_check->bind_result($existing_email, $existing_phone);
-        $stmt_check->fetch();
-        
-        if ($existing_email === $email) {
-            $error_msg = "Lỗi: Email '$email' đã tồn tại trong hệ thống!";
-        } else {
-            $error_msg = "Lỗi: Số điện thoại '$phone' đã được sử dụng cho tài khoản khác!";
-        }
-        $show_modal = true; 
+    if (!preg_match('/^0[0-9]{9}$/', $phone)) {
+        $error_msg = "Lỗi: Số điện thoại không hợp lệ (phải bắt đầu bằng số 0 và đủ 10 số)!";
+        $show_modal = true;
+    } elseif (strlen($raw_password) < 5 || strlen($raw_password) > 10) {
+        $error_msg = "Lỗi: Mật khẩu bắt buộc phải từ 5 - 10 ký tự!";
+        $show_modal = true;
     } else {
-        $hashed_password = password_hash($raw_password, PASSWORD_DEFAULT);
-        $stmt = $conn->prepare("INSERT INTO users(fullname, email, phone, password, address, role) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssss", $name, $email, $phone, $hashed_password, $address, $role);
+        $stmt_check = $conn->prepare("SELECT email, phone FROM users WHERE email = ? OR phone = ? LIMIT 1");
+        $stmt_check->bind_param("ss", $email, $phone);
+        $stmt_check->execute();
+        $stmt_check->store_result();
         
-        if($stmt->execute()){
-            $_SESSION['success_msg'] = "Thêm người dùng mới thành công!";
-            header("Location: user-management.php");
-            exit();
+        if ($stmt_check->num_rows > 0) {
+            $stmt_check->bind_result($existing_email, $existing_phone);
+            $stmt_check->fetch();
+            
+            if ($existing_email === $email) {
+                $error_msg = "Lỗi: Email '$email' đã tồn tại trong hệ thống!";
+            } else {
+                $error_msg = "Lỗi: Số điện thoại '$phone' đã được sử dụng cho tài khoản khác!";
+            }
+            $show_modal = true; 
         } else {
-            $error_msg = "Lỗi CSDL: Không thể thêm người dùng!";
-            $show_modal = true;
+            $hashed_password = password_hash($raw_password, PASSWORD_DEFAULT);
+            $stmt = $conn->prepare("INSERT INTO users(fullname, email, phone, password, address, role) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("ssssss", $name, $email, $phone, $hashed_password, $address, $role);
+            
+            if($stmt->execute()){
+                $_SESSION['success_msg'] = "Thêm người dùng mới thành công!";
+                header("Location: user-management.php");
+                exit();
+            } else {
+                $error_msg = "Lỗi CSDL: Không thể thêm người dùng!";
+                $show_modal = true;
+            }
+            $stmt->close();
         }
-        $stmt->close();
+        $stmt_check->close();
     }
-    $stmt_check->close();
 }
 
-$search = "";
-if (isset($_GET['search'])) {
-    $search = mysqli_real_escape_string($conn, $_GET['search']);
-}
+$raw_search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$search = $raw_search;
 
-if (!empty($search)) {
-    $sql = "SELECT * FROM users 
-            WHERE fullname LIKE '%$search%' 
-            OR email LIKE '%$search%' 
-            OR phone LIKE '%$search%' 
-            ORDER BY id DESC";
+if (!empty($raw_search)) {
+    $search_term = "%" . $raw_search . "%";
+    $sql = "SELECT * FROM users WHERE fullname LIKE ? OR email LIKE ? OR phone LIKE ? ORDER BY id DESC";
+    $stmt_search = $conn->prepare($sql);
+    $stmt_search->bind_param("sss", $search_term, $search_term, $search_term);
+    $stmt_search->execute();
+    $result = $stmt_search->get_result();
 } else {
     $sql = "SELECT * FROM users ORDER BY id DESC";
+    $result = mysqli_query($conn, $sql);
 }
-$result = mysqli_query($conn, $sql);
 ?>
 
 <!DOCTYPE html>

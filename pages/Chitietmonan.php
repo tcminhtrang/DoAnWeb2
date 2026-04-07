@@ -3,14 +3,27 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
 include '../config/database.php'; 
 
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-$sql = "SELECT * FROM products WHERE id = $id";
-$result = mysqli_query($conn, $sql);
+if ($id <= 0) { 
+    header("Location: Thucdon.php"); 
+    exit(); 
+}
+
+$stmt = mysqli_prepare($conn, "SELECT * FROM products WHERE id = ? AND status = 'active'");
+mysqli_stmt_bind_param($stmt, "i", $id);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
 $product = mysqli_fetch_assoc($result);
 
-if (!$product) { header("Location: Thucdon.php"); exit(); }
+if (!$product) { 
+    header("Location: Thucdon.php"); 
+    exit(); 
+}
+
 $cat_id = $product['category_id'];
-$sql_related = "SELECT * FROM products WHERE category_id = $cat_id AND id != $id LIMIT 4";
-$result_related = mysqli_query($conn, $sql_related);
+$stmt_related = mysqli_prepare($conn, "SELECT * FROM products WHERE category_id = ? AND id != ? AND status = 'active' LIMIT 4");
+mysqli_stmt_bind_param($stmt_related, "ii", $cat_id, $id);
+mysqli_stmt_execute($stmt_related);
+$result_related = mysqli_stmt_get_result($stmt_related);
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -27,10 +40,10 @@ $result_related = mysqli_query($conn, $sql_related);
         <section class="product-detail">
             <div class="product-images">
                 <div class="main-image">
-                    <img src="../images/<?php echo htmlspecialchars($product['image']); ?>" alt="<?php echo htmlspecialchars($product['product_name']); ?>">
+                    <img src="../images/<?php echo htmlspecialchars($product['image']); ?>" onerror="this.src='../images/default.jpg'" alt="<?php echo htmlspecialchars($product['product_name']); ?>">
                 </div>
                 <div class="thumbnail-images">
-                    <img src="../images/<?php echo htmlspecialchars($product['image']); ?>" alt="Ảnh 1">
+                    <img src="../images/<?php echo htmlspecialchars($product['image']); ?>" onerror="this.src='../images/default.jpg'" alt="Ảnh 1">
                     <img src="../images/ga-ran-a1.jpg" alt="Mẫu">
                     <img src="../images/ga-ran-a2.jpg" alt="Mẫu">
                     <img src="../images/ga-ran-a3.jpg" alt="Mẫu">
@@ -106,7 +119,7 @@ $result_related = mysqli_query($conn, $sql_related);
                 <?php while($item = mysqli_fetch_assoc($result_related)): ?>
                 <a href="Chitietmonan.php?id=<?php echo $item['id']; ?>" style="text-decoration: none;">
                     <div class="product-card">
-                        <img src="../images/<?php echo htmlspecialchars($item['image']); ?>" alt="<?php echo htmlspecialchars($item['product_name']); ?>">
+                        <img src="../images/<?php echo htmlspecialchars($item['image']); ?>" onerror="this.src='../images/default.jpg'" alt="<?php echo htmlspecialchars($item['product_name']); ?>">
                         <h3><?php echo htmlspecialchars($item['product_name']); ?></h3>
                         <p><?php echo number_format($item['price'], 0, ',', '.'); ?>đ</p>
                         

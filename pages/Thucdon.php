@@ -141,7 +141,7 @@ $query_string = "search=" . urlencode($raw_input) . "&category=" . urlencode($ca
             <form action="Thucdon.php" method="GET" class="container">
                 <div class="search-bar">
                     <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" 
-                           placeholder="Tìm tên món, hoặc gõ #GaRan, >50k..." class="search-input">
+                           placeholder="Tìm tên món" class="search-input">
                     <button type="submit" class="search-btn">
                         <i class="fas fa-search"></i> Tìm kiếm
                     </button>
@@ -157,9 +157,7 @@ $query_string = "search=" . urlencode($raw_input) . "&category=" . urlencode($ca
                             $cat_query = mysqli_query($conn, "SELECT * FROM categories WHERE status = 'active' ORDER BY category_name ASC");
                             if (mysqli_num_rows($cat_query) > 0) {
                                 while($cat = mysqli_fetch_assoc($cat_query)) {
-                                    // Kiểm tra xem ID danh mục này có đang được chọn không
                                     $selected = ($category == $cat['id']) ? 'selected' : '';
-                                    // In ra thẻ option
                                     echo "<option value='{$cat['id']}' $selected>" . htmlspecialchars($cat['category_name']) . "</option>";
                                 }
                             }
@@ -240,7 +238,6 @@ $query_string = "search=" . urlencode($raw_input) . "&category=" . urlencode($ca
     <?php include '../includes/footer.php'; ?>
 
     <script>
-        // Truyền trạng thái đăng nhập từ PHP sang JS
         const isLoggedIn = <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>;
     </script>
     <script src="../js/main.js"></script>

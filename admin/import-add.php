@@ -74,7 +74,6 @@ if ($result_code && $result_code->num_rows > 0) {
     $next_code = 'PN001';
 }
 ?>
-?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>

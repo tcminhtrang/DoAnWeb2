@@ -3,9 +3,13 @@ require_once 'check_admin.php';
 require_once '../config/database.php';
 
 if (isset($_GET['id'])) {
-    $id = $_GET['id'];
-    $sql_get = "SELECT * FROM import_receipts WHERE id = $id";
-    $result = $conn->query($sql_get);
+    $id = (int)$_GET['id'];
+    
+    $stmt_get = $conn->prepare("SELECT * FROM import_receipts WHERE id = ?");
+    $stmt_get->bind_param("i", $id);
+    $stmt_get->execute();
+    $result = $stmt_get->get_result();
+    
     if ($result->num_rows > 0) {
         $receipt = $result->fetch_assoc();
         if($receipt['status'] == 'completed') {
@@ -15,7 +19,10 @@ if (isset($_GET['id'])) {
     } else {
         header("Location: import.php"); exit();
     }
-} else { header("Location: import.php"); exit(); }
+    $stmt_get->close();
+} else { 
+    header("Location: import.php"); exit(); 
+}
 
 $sql_products = "SELECT id, product_name, product_code FROM products WHERE status = 'active'";
 $result_products = $conn->query($sql_products);
@@ -45,43 +52,55 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $product_ids = $_POST['product_id'];
     $quantities = $_POST['quantity'];
     $prices = $_POST['import_price'];
+    mysqli_begin_transaction($conn);
 
-    $conn->query("DELETE FROM import_receipt_details WHERE receipt_id = $id");
+    try {
+        $stmt_del = $conn->prepare("DELETE FROM import_receipt_details WHERE receipt_id = ?");
+        $stmt_del->bind_param("i", $id);
+        $stmt_del->execute();
+        $stmt_insert_detail = $conn->prepare("INSERT INTO import_receipt_details (receipt_id, product_id, quantity, import_price) VALUES (?, ?, ?, ?)");
+        $stmt_update_prod = $conn->prepare("UPDATE products SET import_price = ?, price = ?, stock = ? WHERE id = ?");
 
-    for ($i = 0; $i < count($product_ids); $i++) {
-        $p_id = $product_ids[$i];
-        $qty = $quantities[$i];
-        $price = $prices[$i];
+        for ($i = 0; $i < count($product_ids); $i++) {
+            $p_id = (int)$product_ids[$i];
+            $qty = (int)$quantities[$i];
+            $price = (float)$prices[$i];
 
-        if (empty($p_id) || $qty <= 0 || $price < 1000) continue;
+            if (empty($p_id) || $qty <= 0 || $price < 1000) continue;
 
-        $subtotal = $qty * $price;
-        $total_all += $subtotal;
+            $subtotal = $qty * $price;
+            $total_all += $subtotal;
+            $stmt_insert_detail->bind_param("iiid", $id, $p_id, $qty, $price);
+            $stmt_insert_detail->execute();
 
-        $conn->query("INSERT INTO import_receipt_details (receipt_id, product_id, quantity, import_price) VALUES ($id, $p_id, $qty, $price)");
+            if ($trang_thai == 'completed' && $receipt['status'] == 'pending') {
+                $res_prod = $conn->query("SELECT stock, import_price, profit_rate FROM products WHERE id = $p_id FOR UPDATE");
+                $prod = $res_prod->fetch_assoc();
 
-        if ($trang_thai == 'completed' && $receipt['status'] == 'pending') {
-            $res_prod = $conn->query("SELECT stock, import_price, profit_rate FROM products WHERE id = $p_id");
-            $prod = $res_prod->fetch_assoc();
-
-            $ton_hien_tai = $prod['stock'];
-            $gia_von_hien_tai = $prod['import_price'];
-            $ty_le_loi_nhuan = $prod['profit_rate']; 
-            
-            $tu_so = ($ton_hien_tai * $gia_von_hien_tai) + ($qty * $price);
-            $mau_so = $ton_hien_tai + $qty;
-            $gia_von_moi = $mau_so > 0 ? round($tu_so / $mau_so) : 0; 
-            $gia_ban_moi = round($gia_von_moi * (1 + $ty_le_loi_nhuan));
-            $ton_moi = $ton_hien_tai + $qty;
-
-            $conn->query("UPDATE products SET import_price = $gia_von_moi, price = $gia_ban_moi, stock = $ton_moi WHERE id = $p_id");
+                $ton_hien_tai = $prod['stock'];
+                $gia_von_hien_tai = $prod['import_price'];
+                $ty_le_loi_nhuan = $prod['profit_rate']; 
+                
+                $tu_so = ($ton_hien_tai * $gia_von_hien_tai) + ($qty * $price);
+                $mau_so = $ton_hien_tai + $qty;
+                $gia_von_moi = $mau_so > 0 ? round($tu_so / $mau_so) : 0; 
+                $gia_ban_moi = round($gia_von_moi * (1 + $ty_le_loi_nhuan));
+                $ton_moi = $ton_hien_tai + $qty;
+                $stmt_update_prod->bind_param("ddii", $gia_von_moi, $gia_ban_moi, $ton_moi, $p_id);
+                $stmt_update_prod->execute();
+            }
         }
+        $stmt_update_receipt = $conn->prepare("UPDATE import_receipts SET import_date = ?, status = ?, total_amount = ? WHERE id = ?");
+        $stmt_update_receipt->bind_param("ssdi", $ngay_nhap, $trang_thai, $total_all, $id);
+        $stmt_update_receipt->execute();
+        mysqli_commit($conn);
+        header("Location: import.php"); 
+        exit();
+
+    } catch (Exception $e) {
+        mysqli_rollback($conn);
+        echo "<script>alert('Lỗi hệ thống: Không thể lưu cập nhật phiếu nhập!');</script>";
     }
-
-    $conn->query("UPDATE import_receipts SET import_date = '$ngay_nhap', status = '$trang_thai', total_amount = $total_all WHERE id = $id");
-
-    header("Location: import.php"); 
-    exit();
 }
 ?>
 <!DOCTYPE html>

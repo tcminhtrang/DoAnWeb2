@@ -3,9 +3,12 @@ require_once 'check_admin.php';
 require_once '../config/database.php';
 
 if (isset($_GET['id'])) {
-    $id = $_GET['id'];
-    $sql_get = "SELECT * FROM categories WHERE id = $id";
-    $result = $conn->query($sql_get);
+    $id = (int)$_GET['id']; 
+    
+    $stmt_get = $conn->prepare("SELECT * FROM categories WHERE id = ?");
+    $stmt_get->bind_param("i", $id);
+    $stmt_get->execute();
+    $result = $stmt_get->get_result();
     
     if ($result->num_rows > 0) {
         $row = $result->fetch_assoc(); 
@@ -13,6 +16,7 @@ if (isset($_GET['id'])) {
         header("Location: category.php");
         exit();
     }
+    $stmt_get->close();
 } else {
     header("Location: category.php");
     exit();
@@ -20,24 +24,22 @@ if (isset($_GET['id'])) {
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $ten_loai = trim($_POST['category-name']);
-    $mo_ta = trim($_POST['category-desc']);
     $trang_thai = $_POST['category-status'];
+    $mo_ta = isset($_POST['category-desc']) ? trim($_POST['category-desc']) : $row['description'];
 
     if($ten_loai == "") {
         $error_msg = "Tên loại không được để trống!";
     } else {
-        $sql_update = "UPDATE categories 
-                       SET category_name = '$ten_loai', description = '$mo_ta', status = '$trang_thai' 
-                       WHERE id = $id";
+        $stmt_update = $conn->prepare("UPDATE categories SET category_name = ?, description = ?, status = ? WHERE id = ?");
+        $stmt_update->bind_param("sssi", $ten_loai, $mo_ta, $trang_thai, $id);
 
-        if ($conn->query($sql_update) === TRUE) {
-            $conn->query("UPDATE products SET category = '$ten_loai' WHERE category_id = $id");
-
+        if ($stmt_update->execute()) {            
             header("Location: category.php"); 
             exit();
         } else {
             $error_msg = "Có lỗi xảy ra khi cập nhật!";
         }
+        $stmt_update->close();
     }
 }
 ?>

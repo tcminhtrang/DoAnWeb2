@@ -1,25 +1,35 @@
 <?php
 require_once 'check_admin.php';
 require_once '../config/database.php';
+
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-$sql = "SELECT o.*, u.fullname 
-        FROM orders o
-        LEFT JOIN users u ON o.user_id = u.id
-        WHERE o.id = $id";
-$order = mysqli_fetch_assoc(mysqli_query($conn, $sql));
+
+if ($id <= 0) {
+    echo "<h2>Không tìm thấy đơn hàng</h2>";
+    exit;
+}
+$stmt_order = mysqli_prepare($conn, "SELECT o.*, u.fullname FROM orders o LEFT JOIN users u ON o.user_id = u.id WHERE o.id = ?");
+mysqli_stmt_bind_param($stmt_order, "i", $id);
+mysqli_stmt_execute($stmt_order);
+$order = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt_order));
+
 if (!$order) {
     echo "<h2>Không tìm thấy đơn hàng</h2>";
     exit;
 }
-$sqlDetail = "SELECT od.*, p.product_name, p.image
-              FROM order_details od
-              JOIN products p ON od.product_id = p.id
-              WHERE od.order_id = $id";
-$details = mysqli_query($conn, $sqlDetail) or die(mysqli_error($conn));
+$stmt_detail = mysqli_prepare($conn, "SELECT od.*, p.product_name, p.image FROM order_details od JOIN products p ON od.product_id = p.id WHERE od.order_id = ?");
+mysqli_stmt_bind_param($stmt_detail, "i", $id);
+mysqli_stmt_execute($stmt_detail);
+$details = mysqli_stmt_get_result($stmt_detail);
+
 $paymentMethod = "Không xác định";
 if ($order['payment_method'] == 'cod') $paymentMethod = "Thanh toán khi nhận hàng (COD)";
 if ($order['payment_method'] == 'banking') $paymentMethod = "Chuyển khoản ngân hàng";
 if ($order['payment_method'] == 'online') $paymentMethod = "Thanh toán Online";
+$full_address = $order['address'];
+if (!empty($order['ward'])) {
+    $full_address .= ', ' . $order['ward'];
+}
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -128,7 +138,7 @@ if ($order['payment_method'] == 'online') $paymentMethod = "Thanh toán Online";
                     <h3> Thông tin giao hàng</h3>
                     <p><strong>Người nhận:</strong> <?= htmlspecialchars($order['receiver_name']) ?></p>
                     <p><strong>Số điện thoại:</strong> <?= htmlspecialchars($order['phone']) ?></p>
-                    <p><strong>Địa chỉ:</strong> <?= htmlspecialchars($order['address']) ?>, <?= htmlspecialchars($order['ward']) ?></p>
+                    <p><strong>Địa chỉ:</strong> <?= htmlspecialchars($full_address) ?></p>
                     <p><strong>Ghi chú:</strong> <span style="color: #d35400; font-style: italic;"><?= !empty($order['order_note']) ? htmlspecialchars($order['order_note']) : 'Không có' ?></span></p>
                 </div>
                 

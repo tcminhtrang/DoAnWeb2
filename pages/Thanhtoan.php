@@ -1,17 +1,34 @@
 <?php
 session_start();
 require_once '../config/database.php'; 
+if(!defined('POINT_TO_MONEY')) define('POINT_TO_MONEY', 1000); 
 
-if (!isset($_SESSION['user_id'])) { header("Location: Dangnhap.php"); exit(); }
-$user_id = $_SESSION['user_id'];
+if (!isset($_SESSION['user_id'])) { 
+    header("Location: Dangnhap.php"); 
+    exit(); 
+}
+$user_id = (int)$_SESSION['user_id'];
+$stmt_user = mysqli_prepare($conn, "SELECT * FROM users WHERE id = ?");
+mysqli_stmt_bind_param($stmt_user, "i", $user_id);
+mysqli_stmt_execute($stmt_user);
+$user = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt_user));
 
-$user = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM users WHERE id = $user_id"));
 $total_money = 0;
 $cart_items = [];
-$res = mysqli_query($conn, "SELECT c.*, p.product_name, p.price, p.image FROM cart c JOIN products p ON c.product_id = p.id WHERE c.user_id = $user_id");
+
+$stmt_cart = mysqli_prepare($conn, "SELECT c.*, p.product_name, p.price, p.image FROM cart c JOIN products p ON c.product_id = p.id WHERE c.user_id = ?");
+mysqli_stmt_bind_param($stmt_cart, "i", $user_id);
+mysqli_stmt_execute($stmt_cart);
+$res = mysqli_stmt_get_result($stmt_cart);
+
 while($row = mysqli_fetch_assoc($res)) {
     $total_money += $row['price'] * $row['quantity'];
     $cart_items[] = $row;
+}
+
+if (empty($cart_items)) {
+    header("Location: Giohang.php");
+    exit();
 }
 
 $user_points = $user['points'] ?? 0;
@@ -43,7 +60,7 @@ $max_points_discount = $user_points * POINT_TO_MONEY;
                                     <strong style="font-size: 1.1em; color: #333;"><?php echo $user['fullname']; ?></strong>
                                     <span style="background: #ff6347; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-left: 10px;">Mặc định</span>
                                     <div style="margin-top: 8px; color: #666;">
-                                        <p style="margin: 3px 0;"><i class="fas fa-phone-alt" style="width: 20px; color: #ff6347;"></i> 0<?php echo $user['phone']; ?></p>
+                                        <p style="margin: 3px 0;"><i class="fas fa-phone-alt" style="width: 20px; color: #ff6347;"></i> <?php echo htmlspecialchars($user['phone']); ?></p>
                                         <p style="margin: 3px 0;"><i class="fas fa-home" style="width: 20px; color: #ff6347;"></i> <?php echo $user['address']; ?></p>
                                     </div>
                                 </div>

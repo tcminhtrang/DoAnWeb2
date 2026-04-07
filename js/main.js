@@ -113,17 +113,6 @@ function addToCart(productId, quantity) {
         };
     });
 
-    // --- C. HIỆU ỨNG PLACEHOLDER Ô TÌM KIẾM ---
-    const searchInput = document.querySelector('input[name="search"]');
-    if (searchInput) {
-        const placeholders = ["Tìm món ăn...", "Thử: 'Mì ý'", "Gõ '50000' lọc giá"];
-        let pIndex = 0;
-        setInterval(() => {
-            searchInput.placeholder = placeholders[pIndex];
-            pIndex = (pIndex + 1) % placeholders.length;
-        }, 3000);
-    }
-
     // --- D. LOGIC THANH TOÁN (ẨN HIỆN FORM & VALIDATION) ---
     const addrRadios = document.querySelectorAll('input[name="address_type"]');
     const newAddressFields = document.getElementById('new-address-fields');

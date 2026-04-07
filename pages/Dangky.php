@@ -8,36 +8,56 @@ $errors = [];
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $ho = trim($_POST['ho']);
     $ten = trim($_POST['ten']);
-    
-    // Gộp Họ và Tên thành fullname để lưu vào DB
-    $fullname = mysqli_real_escape_string($conn, $ho . " " . $ten);
-    $email = mysqli_real_escape_string($conn, $_POST['email']);
-    $phone = mysqli_real_escape_string($conn, $_POST['phone']);
-    $city = mysqli_real_escape_string($conn, $_POST['city']);
-    $district = mysqli_real_escape_string($conn, $_POST['district']);
-    $address_detail = mysqli_real_escape_string($conn, $_POST['address_detail']);
+    $fullname = trim($ho . " " . $ten);
+    $email = trim($_POST['email']);
+    $phone = trim($_POST['phone']);
+    $city = trim($_POST['city']);
+    $district = trim($_POST['district']);
+    $address_detail = trim($_POST['address_detail']);
     $password = $_POST['password'];
-    
-    // Tạo địa chỉ đầy đủ
-    $full_address = $address_detail . ", " . $district . ", " . $city;
-
-    // Kiểm tra trùng email
-    $check_email = "SELECT id FROM users WHERE email = '$email'";
-    $result = mysqli_query($conn, $check_email);
-    if (mysqli_num_rows($result) > 0) {
-        $errors['email'] = "Email này đã được sử dụng!";
+    $confirm_password = $_POST['confirm_password'] ?? '';
+    $full_address = trim($address_detail . ", " . $district . ", " . $city);
+    if (strlen($password) < 5 || strlen($password) > 10) {
+        $errors['password'] = "Mật khẩu phải từ 5-10 ký tự!";
+    }
+    if ($password !== $confirm_password) {
+        $errors['confirm_password'] = "Mật khẩu xác nhận không khớp!";
+    }
+    if (!preg_match('/^0[0-9]{9}$/', $phone)) {
+        $errors['phone'] = "Số điện thoại không hợp lệ!";
     }
 
-    // Nếu không có lỗi phía server thì tiến hành INSERT
+    if (empty($errors)) {
+        $stmt_check = mysqli_prepare($conn, "SELECT email, phone FROM users WHERE email = ? OR phone = ?");
+        mysqli_stmt_bind_param($stmt_check, "ss", $email, $phone);
+        mysqli_stmt_execute($stmt_check);
+        $result_check = mysqli_stmt_get_result($stmt_check);
+        
+        while ($row = mysqli_fetch_assoc($result_check)) {
+            if ($row['email'] === $email) {
+                $errors['email'] = "Email này đã được sử dụng!";
+            }
+            if ($row['phone'] === $phone) {
+                $errors['phone'] = "Số điện thoại này đã được đăng ký!";
+            }
+        }
+        mysqli_stmt_close($stmt_check);
+    }
+
     if (empty($errors)) {
         $password_hashed = password_hash($password, PASSWORD_DEFAULT);
-        $sql = "INSERT INTO users (fullname, email, password, phone, address, role) 
-                VALUES ('$fullname', '$email', '$password_hashed', '$phone', '$full_address', 'user')";
+        $role = 'user';
         
-        if (mysqli_query($conn, $sql)) {
+        $stmt_insert = mysqli_prepare($conn, "INSERT INTO users (fullname, email, password, phone, address, role) VALUES (?, ?, ?, ?, ?, ?)");
+        mysqli_stmt_bind_param($stmt_insert, "ssssss", $fullname, $email, $password_hashed, $phone, $full_address, $role);
+        
+        if (mysqli_stmt_execute($stmt_insert)) {
             echo "<script>alert('Đăng ký thành công!'); window.location.href='Dangnhap.php';</script>";
             exit();
+        } else {
+            $errors['database'] = "Lỗi hệ thống, vui lòng thử lại sau!";
         }
+        mysqli_stmt_close($stmt_insert);
     }
 }
 ?>

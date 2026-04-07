@@ -4,10 +4,15 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once __DIR__ . '/../config/database.php';
+
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
-    $check_sql = "SELECT status FROM users WHERE id = '$user_id' LIMIT 1";
-    $check_res = mysqli_query($conn, $check_sql);
+    
+    // 1. FIX LỖI BIÊN BẢN: Đổi sang Prepared Statement an toàn tuyệt đối
+    $stmt = mysqli_prepare($conn, "SELECT status FROM users WHERE id = ? LIMIT 1");
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
+    mysqli_stmt_execute($stmt);
+    $check_res = mysqli_stmt_get_result($stmt);
     
     if ($check_res && mysqli_num_rows($check_res) > 0) {
         $user_data = mysqli_fetch_assoc($check_res);
@@ -21,6 +26,7 @@ if (isset($_SESSION['user_id'])) {
             exit();
         }
     }
+    mysqli_stmt_close($stmt);
 }
 ?>
 
@@ -58,7 +64,7 @@ if (isset($_SESSION['user_id'])) {
         <?php if(isset($_SESSION['user_id'])): ?>
             <a href="../pages/Thongtincanhan.php" class="nav-item active">
                 <img src="../images/Taikhoan.png" alt="Avatar"> 
-                <span class="nav-text"><?php echo $_SESSION['user_fullname']; ?></span>
+                <span class="nav-text"><?php echo htmlspecialchars($_SESSION['user_fullname']); ?></span>
             </a>
             <a href="../pages/Logout.php" class="nav-item logout-btn">
                 <img src="../images/logout.png" alt="logout">
