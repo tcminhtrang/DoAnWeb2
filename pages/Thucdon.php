@@ -11,18 +11,24 @@ $category = $_GET['category'] ?? '';
 $min_price = (isset($_GET['min_price']) && $_GET['min_price'] !== '') ? (float)$_GET['min_price'] : 0;
 $max_price = (isset($_GET['max_price']) && $_GET['max_price'] !== '') ? (float)$_GET['max_price'] : 999999999;
 
+if ($min_price > $max_price && $max_price != 999999999) {
+    $temp = $min_price;
+    $min_price = $max_price;
+    $max_price = $temp;
+}
+
 if (preg_match('/#(\w+)/u', $raw_input, $matches)) {
     $category = $matches[1];
     $search_name = str_replace($matches[0], '', $search_name);
 }
 
-if (preg_match('/>(\d+)/', $raw_input, $matches)) {
+if (preg_match('/>(\d+)[kK]?/u', $raw_input, $matches)) {
     $min_price = (float)$matches[1];
     if ($min_price < 1000) $min_price *= 1000;
     $search_name = str_replace($matches[0], '', $search_name);
 } 
 
-if (preg_match('/<(\d+)/', $raw_input, $matches)) {
+if (preg_match('/<(\d+)[kK]?/u', $raw_input, $matches)) {
     $max_price = (float)$matches[1];
     if ($max_price < 1000) $max_price *= 1000;
     $search_name = str_replace($matches[0], '', $search_name);
@@ -52,11 +58,16 @@ if ($search_name !== '') {
 }
 
 if ($category !== '') {
-    $conditions[] = "p.category_id = ?";
-    $params[] = (int)$category;
-    $types .= "i";
+    if (is_numeric($category)) {
+        $conditions[] = "p.category_id = ?";
+        $params[] = (int)$category;
+        $types .= "i";
+    } else {
+        $conditions[] = "REPLACE(c.category_name, ' ', '') LIKE ?";
+        $params[] = "%" . $category . "%";
+        $types .= "s";
+    }
 }
-
 // Xử lý giá
 $conditions[] = "p.price >= ? AND p.price <= ?";
 $params[] = (float)$min_price;
@@ -128,9 +139,8 @@ $query_string = "search=" . urlencode($raw_input) . "&category=" . urlencode($ca
     <main class="main-content">
         <section class="search-bar-wrapper">
             <form action="Thucdon.php" method="GET" class="container">
-                <input type="hidden" name="page" value="1">
                 <div class="search-bar">
-                    <input type="text" name="search" value="<?php echo htmlspecialchars($raw_input); ?>" 
+                    <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" 
                            placeholder="Tìm tên món, hoặc gõ #GaRan, >50k..." class="search-input">
                     <button type="submit" class="search-btn">
                         <i class="fas fa-search"></i> Tìm kiếm
@@ -144,8 +154,7 @@ $query_string = "search=" . urlencode($raw_input) . "&category=" . urlencode($ca
                         <select name="category" style="padding: 5px 10px; border-radius: 4px; border: 1px solid #ddd;">
                             <option value="">Tất cả</option>
                             <?php
-                            $cat_query = mysqli_query($conn, "SELECT * FROM categories"); 
-
+                            $cat_query = mysqli_query($conn, "SELECT * FROM categories WHERE status = 'active' ORDER BY category_name ASC");
                             if (mysqli_num_rows($cat_query) > 0) {
                                 while($cat = mysqli_fetch_assoc($cat_query)) {
                                     // Kiểm tra xem ID danh mục này có đang được chọn không
@@ -183,7 +192,7 @@ $query_string = "search=" . urlencode($raw_input) . "&category=" . urlencode($ca
                             <?php if(isset($row['is_new']) && $row['is_new'] == 1): ?>
                                 <div class="badge-tag new-tag">New</div>
                             <?php endif; ?>
-                            <img src="../images/<?php echo $row['image']; ?>" alt="<?php echo htmlspecialchars($row['product_name']); ?>">
+                            <img src="../images/<?php echo $row['image']; ?>" onerror="this.src='../images/default.jpg'" alt="<?php echo htmlspecialchars($row['product_name']); ?>">
                         </a>
                         <div class="card-content">
                             <h3><?php echo htmlspecialchars($row['product_name']); ?></h3>
