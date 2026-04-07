@@ -1,48 +1,76 @@
-<?php 
+<?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 include '../config/database.php'; 
 
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $raw_input = $search; 
 
+// Mặc định ban đầu
 $search_name = $search;
 $category = $_GET['category'] ?? '';
-
 $min_price = (isset($_GET['min_price']) && $_GET['min_price'] !== '') ? (float)$_GET['min_price'] : 0;
 $max_price = (isset($_GET['max_price']) && $_GET['max_price'] !== '') ? (float)$_GET['max_price'] : 999999999;
 
+// --- BẮT ĐẦU LOGIC NÂNG CAO ---
+if (!empty($search)) {
+    // 1. Xử lý đơn vị 'k' hoặc 'K' trong chuỗi (ví dụ: 50k -> 50000)
+    $temp_search = preg_replace_callback('/(\d+)[kK]\b/u', function($m) {
+        return $m[1] * 1000;
+    }, $search);
+
+    // 2. Tìm tất cả các con số có trong chuỗi
+    preg_match_all('/\d+/', $temp_search, $matches);
+    $numbers = $matches[0];
+
+    // Chỉ tự động tính toán giá từ search nếu người dùng không nhập tay vào ô min_price/max_price
+    if (empty($_GET['min_price']) && empty($_GET['max_price'])) {
+        if (count($numbers) >= 2) {
+            // Có 2 số: hiểu là Khoảng giá (min - max)
+            $n1 = (float)$numbers[0]; $n2 = (float)$numbers[1];
+            $min_price = min($n1, $n2);
+            $max_price = max($n1, $n2);
+            if ($min_price < 1000) $min_price *= 1000;
+            if ($max_price < 1000) $max_price *= 1000;
+        } elseif (count($numbers) == 1) {
+            // Có 1 số: hiểu là Giá tối đa (<= max)
+            $n1 = (float)$numbers[0];
+            if ($n1 < 1000) $n1 *= 1000;
+            $max_price = $n1;
+            $min_price = 0;
+        }
+    }
+
+    // 3. Tách phần chữ ra khỏi phần số để tìm tên món chính xác
+    // Xóa các số đã tìm thấy khỏi search_name để LIKE ko bị sai
+    $search_name = $temp_search;
+    foreach ($numbers as $num) {
+        // Chỉ xóa số nếu nó đứng tách biệt (tránh xóa số trong tên món nếu có)
+        $search_name = preg_replace('/\b' . $num . '\b/u', '', $search_name);
+    }
+    $search_name = trim(preg_replace('/\s+/', ' ', $search_name));
+}
+// --- KẾT THÚC LOGIC NÂNG CAO ---
+
+// Giữ nguyên logic đảo giá của bạn
 if ($min_price > $max_price && $max_price != 999999999) {
     $temp = $min_price;
     $min_price = $max_price;
     $max_price = $temp;
 }
 
+// Giữ nguyên logic Hashtag # của bạn
 if (preg_match('/#(\w+)/u', $raw_input, $matches)) {
     $category = $matches[1];
-    $search_name = str_replace($matches[0], '', $search_name);
 }
-
-if (preg_match('/>(\d+)[kK]?/u', $raw_input, $matches)) {
-    $min_price = (float)$matches[1];
-    if ($min_price < 1000) $min_price *= 1000;
-    $search_name = str_replace($matches[0], '', $search_name);
-} 
-
-if (preg_match('/<(\d+)[kK]?/u', $raw_input, $matches)) {
-    $max_price = (float)$matches[1];
-    if ($max_price < 1000) $max_price *= 1000;
-    $search_name = str_replace($matches[0], '', $search_name);
-}
-$search_name = trim($search_name);
 
 $conditions = ["p.status = 'active'"];
 $params = [];
 $types = "";
 
+// Logic tạo câu SQL LIKE (Giữ nguyên của bạn)
 if ($search_name !== '') {
     $keywords = explode(' ', $search_name);
     $sub_conditions = [];
-    
     foreach ($keywords as $word) {
         $word = trim($word);
         if ($word !== '') {
@@ -51,12 +79,12 @@ if ($search_name !== '') {
             $types .= "s";
         }
     }
-    
     if (!empty($sub_conditions)) {
         $conditions[] = "(" . implode(" AND ", $sub_conditions) . ")";
     }
 }
 
+// Logic Category (Giữ nguyên của bạn)
 if ($category !== '') {
     if (is_numeric($category)) {
         $conditions[] = "p.category_id = ?";
@@ -68,13 +96,16 @@ if ($category !== '') {
         $types .= "s";
     }
 }
-// Xử lý giá
+
+// Xử lý giá (Giữ nguyên của bạn)
 $conditions[] = "p.price >= ? AND p.price <= ?";
 $params[] = (float)$min_price;
 $params[] = (float)$max_price;
-$types .= "dd"; // d đại diện cho kiểu double/float
+$types .= "dd";
 
 $where_clause = " WHERE " . implode(" AND ", $conditions);
+
+// ... (Phần code Phân trang và Query bên dưới giữ nguyên 100%) ...
 
 // 4. PHÂN TRANG VÀ THỰC THI TRUY VẤN CHÍNH
 $limit = 8; 

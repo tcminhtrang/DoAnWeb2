@@ -143,9 +143,9 @@ INSERT INTO `categories` (`id`,`category_code`, `category_name`, `status`) VALUE
 (3,'L03', 'Combo ăn trưa', 'hidden'),
 (4,'L04', 'Mỳ ý', 'active'), 
 (5,'L05', 'Pizza', 'active'), 
-(6,'L06', 'Món ăn kèm', 'active'),
-(7,'L07', 'Nước Uống', 'active'), 
-(8,'L08', 'Tráng miệng', 'active');
+(6,'L06', 'Khoai tây', 'active'),
+(7,'L07', 'Nước Uống', 'active');
+
 
 INSERT INTO `promotions` (`code`, `name`, `discount_percent`, `start_date`, `end_date`, `status`) VALUES
 ('SINHVIEN', 'Ưu đãi dành cho Học sinh Sinh viên', 20, '2026-01-01', '2026-12-31', 'active'),
