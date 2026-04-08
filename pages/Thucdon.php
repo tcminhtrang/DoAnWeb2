@@ -58,11 +58,6 @@ if ($min_price > $max_price && $max_price != 999999999) {
     $max_price = $temp;
 }
 
-// Giữ nguyên logic Hashtag # của bạn
-if (preg_match('/#(\w+)/u', $raw_input, $matches)) {
-    $category = $matches[1];
-}
-
 $conditions = ["p.status = 'active'"];
 $params = [];
 $types = "";

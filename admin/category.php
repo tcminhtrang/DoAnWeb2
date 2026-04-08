@@ -65,7 +65,7 @@ $result = $conn->query($sql);
                               <a href='category-edit.php?id=" . $row['id'] . "' class='btn-edit'>Sửa</a>";
                               
                     if ($row['status'] == 'active') {
-                        echo "<a href='category-delete.php?id=" . $row['id'] . "' class='btn-gray' onclick=\"return confirm('Bạn có chắc chắn muốn ẩn loại sản phẩm này không?');\">Ẩn</a>";
+                        echo "<a href='category-delete.php?id=" . $row['id'] . "' class='btn-gray' onclick=\"return confirm('Bạn có chắc chắn muốn xóa loại sản phẩm này không?');\">Xóa</a>";
                     } else {
                         echo "<a href='category-restore.php?id=" . $row['id'] . "' class='btn-primary' style='background-color: #28a745;' onclick=\"return confirm('Khôi phục loại sản phẩm này?');\">Bật</a>";
                     }

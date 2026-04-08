@@ -74,7 +74,7 @@ $result = $conn->query($sql);
                             <div class='actions' style='justify-content: center;'>
                               <a href='list-edit.php?id=" . $row['id'] . "' class='btn-edit'>Sửa</a>";
                     if ($row['status'] == 'active') {
-                        echo "<a href='list-delete.php?id=" . $row['id'] . "' class='btn-gray' onclick=\"return confirm('Bạn có muốn ẩn sản phẩm này không?');\">Ẩn</a>";
+                        echo "<a href='list-delete.php?id=" . $row['id'] . "' class='btn-gray' onclick=\"return confirm('Bạn có muốn xóa sản phẩm này không?');\">Xóa</a>";
                     } else {
                         echo "<a href='list-restore.php?id=" . $row['id'] . "' class='btn-primary' style='background-color: #28a745;' onclick=\"return confirm('Khôi phục sản phẩm này?');\">Bật</a>";
                     }
