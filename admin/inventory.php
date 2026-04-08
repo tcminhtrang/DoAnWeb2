@@ -87,11 +87,14 @@ $main_result = $conn->query($sql_main);
                         <td><?php echo htmlspecialchars($row['category_name']); ?></td>
                         <td><?php echo $row['total_import'] ?? 0; ?></td>
                         <td><?php echo $row['total_export'] ?? 0; ?></td>
-                        <td><?php echo $row['stock']; ?></td>
+                        <?php 
+                            $real_stock = ($row['total_import'] ?? 0) - ($row['total_export'] ?? 0); 
+                        ?>
+                        <td><?php echo $real_stock; ?></td>
                         <td>
-                            <?php if($row['stock'] <= 0): ?>
+                            <?php if($real_stock <= 0): ?>
                             <span class="status cancelled">Hết hàng</span>
-                            <?php elseif($row['stock'] < $low_stock_threshold): ?>
+                            <?php elseif($real_stock < $low_stock_threshold): ?>
                             <span class="status cancelled">Sắp hết</span>
                             <?php else: ?>
                             <span class="status active">Còn hàng</span>

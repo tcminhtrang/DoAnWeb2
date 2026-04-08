@@ -24,7 +24,7 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
 
         <form id="loginForm" class="login-form">
             <div class="form-group">
-                <label for="email">Email/Tên đăng nhập</label>
+                <label for="email">Email</label>
                 <input type="email" id="email" placeholder="Nhập email..." required autofocus />
             </div>
             <div class="form-group">
